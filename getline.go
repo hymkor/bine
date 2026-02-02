@@ -27,7 +27,8 @@ func getline(out io.Writer, prompt string, defaultStr string, history readline.I
 		History:        history,
 	}
 	defer io.WriteString(out, _ANSI_CURSOR_OFF)
-	editor.BindKey(keys.Escape, readline.CmdInterrupt)
+	editor.BindKey(keys.CtrlG, readline.CmdInterrupt)
+	editor.BindKey(keys.Escape+keys.CtrlG, readline.CmdInterrupt)
 	text, err := editor.ReadLine(context.Background())
 	if err == readline.CtrlC {
 		return "", errors.New("Canceled")
