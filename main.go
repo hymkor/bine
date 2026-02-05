@@ -338,7 +338,7 @@ func Run(args []string) error {
 	}
 	defer in.Close()
 
-	savePath := "output.new"
+	savePath := ""
 	if len(args) > 0 {
 		savePath, err = filepath.Abs(args[0])
 		if err != nil {
