@@ -12,6 +12,7 @@ Release notes
 - When executing the `q` command, prompt whether to save the changes (#18)
 - Changed the `Esc` key from application exit to a prefix-only key to prevent unintended behavior caused by split input sequences. (#21)
 - Readline: Treat `Ctrl`+`G` and `Meta`+`Ctrl`+`G` as cancel input instead of `Esc` (#24)
+- Remove the default save file name (`output.new`) when reading from standard input. (#26)
 
 v0.6.3
 ------
