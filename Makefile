@@ -36,6 +36,9 @@ dist:
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=386"   && $(MAKE) _dist
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=amd64" && $(MAKE) _dist
 
+release:
+	pwsh -Command "latest-notes.ps1" | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
+
 clean:
 	$(DEL) *.zip $(NAME)$(EXE)
 
