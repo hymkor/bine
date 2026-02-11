@@ -1,6 +1,12 @@
 Bine - A terminal binary editor
 ================================
 
+<!-- go run github.com/hymkor/example-into-readme/cmd/badges@master | -->
+[![Go Test](https://github.com/hymkor/binview/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/binview/actions/workflows/go.yml)
+[![License](https://img.shields.io/badge/License-MIT-red)](https://github.com/hymkor/binview/blob/master/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/hymkor/binview.svg)](https://pkg.go.dev/github.com/hymkor/binview)
+<!-- -->
+
 ![ScreenShot](./screenshot.png)
 
 Key Features
@@ -35,7 +41,7 @@ Install
 
 Download the binary package from [Releases](https://github.com/hymkor/binview/releases) and extract the executable.
 
-<!-- pwsh -Command "readme-install.ps1" | -->
+<!-- go run github.com/hymkor/example-into-readme/cmd/how2install@master | -->
 
 ### Use [eget] installer (cross-platform)
 
@@ -71,7 +77,7 @@ scoop install binview
 go install github.com/hymkor/binview@latest
 ```
 
-Because `go install` introduces the executable into `$HOME/go/bin` or `$GOPATH/bin`, you need to add this directory to your `$PATH` to execute `binview`.
+Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `binview`.
 <!-- -->
 
 Usage
