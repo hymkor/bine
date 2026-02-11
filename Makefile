@@ -21,7 +21,7 @@ EXE=$(shell $(GO) env GOEXE)
 
 all:
 	$(GO) fmt ./...
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
+	$(SET) "CGO_ENABLED=0" && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
 
 test:
 	$(GO) test -v
