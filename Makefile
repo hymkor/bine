@@ -21,7 +21,7 @@ EXE=$(shell $(GO) env GOEXE)
 
 all:
 	$(GO) fmt ./...
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
+	$(SET) "CGO_ENABLED=0" && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
 
 test:
 	$(GO) test -v
@@ -37,12 +37,12 @@ dist:
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=amd64" && $(MAKE) _dist
 
 release:
-	pwsh -Command "latest-notes.ps1" | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
+	$(GO) run github.com/hymkor/latest-notes@master | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
 
 clean:
 	$(DEL) *.zip $(NAME)$(EXE)
 
 manifest:
-	make-scoop-manifest -all *-windows-*.zip > $(NAME).json
+	$(GO) run github.com/hymkor/make-scoop-manifest@master -all *-windows-*.zip > $(NAME).json
 
 .PHONY: all test _dist dist clean manifest

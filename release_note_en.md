@@ -1,6 +1,8 @@
 Release notes
 =============
 
+- Improved build portability by replacing local helper tools with 'go run' (make release, make manifest). (#28)
+
 v0.7.0
 ------
 Feb 6, 2026
