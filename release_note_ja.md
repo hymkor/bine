@@ -1,6 +1,8 @@
 Release notes
 =============
 
+- go run の活用により、外部ツール不要でビルド・メンテナンスができるよう改善した (`make release`, `make manifest`) (#28)
+
 v0.7.0
 ------
 Feb 6, 2026
