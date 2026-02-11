@@ -43,6 +43,6 @@ clean:
 	$(DEL) *.zip $(NAME)$(EXE)
 
 manifest:
-	make-scoop-manifest -all *-windows-*.zip > $(NAME).json
+	$(GO) run github.com/hymkor/make-scoop-manifest@master -all *-windows-*.zip > $(NAME).json
 
 .PHONY: all test _dist dist clean manifest
