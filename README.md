@@ -1,7 +1,7 @@
 Bine - A terminal binary editor
 ================================
 
-<!-- go run github.com/hymkor/example-into-readme/cmd/badges@master | -->
+<!-- stdout: go run github.com/hymkor/example-into-readme/cmd/badges@master -->
 [![Go Test](https://github.com/hymkor/binview/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/binview/actions/workflows/go.yml)
 [![License](https://img.shields.io/badge/License-MIT-red)](https://github.com/hymkor/binview/blob/master/LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/hymkor/binview.svg)](https://pkg.go.dev/github.com/hymkor/binview)
@@ -41,7 +41,7 @@ Install
 
 Download the binary package from [Releases](https://github.com/hymkor/binview/releases) and extract the executable.
 
-<!-- go run github.com/hymkor/example-into-readme/cmd/how2install@master | -->
+<!-- stdout: go run github.com/hymkor/example-into-readme/cmd/how2install@master -->
 
 ### Use [eget] installer (cross-platform)
 
@@ -132,14 +132,16 @@ Key-binding
     * Write changes to file
 * `&`  
     * Jump to a specific address
-* `ALT-U`, `Esc-U`  
+* `Meta-U`  
     * Change the character encoding to UTF-8 (default)
-* `ALT-A`, `Esc-A`  
+* `Meta-A`  
     * Change the character encoding to ANSI (the current Windows code page)
-* `ALT-L`, `Esc-L`  
+* `Meta-L`  
     * Change the character encoding to UTF-16LE
-* `ALT-B`, `Esc-B`  
+* `Meta-B`  
     * Change the character encoding to UTF-16BE
+
+`Meta` means either `Alt`+`key` or `Esc` followed by key.
 
 Release Notes
 -------------
