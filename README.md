@@ -132,14 +132,16 @@ Key-binding
     * Write changes to file
 * `&`  
     * Jump to a specific address
-* `ALT-U`, `Esc-U`  
+* `Meta-U`  
     * Change the character encoding to UTF-8 (default)
-* `ALT-A`, `Esc-A`  
+* `Meta-A`  
     * Change the character encoding to ANSI (the current Windows code page)
-* `ALT-L`, `Esc-L`  
+* `Meta-L`  
     * Change the character encoding to UTF-16LE
-* `ALT-B`, `Esc-B`  
+* `Meta-B`  
     * Change the character encoding to UTF-16BE
+
+`Meta` means either `Alt`+`key` or `Esc` followed by key.
 
 Release Notes
 -------------
