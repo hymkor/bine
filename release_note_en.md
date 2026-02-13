@@ -2,6 +2,7 @@ Release notes
 =============
 
 - Improved build portability by replacing local helper tools with 'go run' (make release, make manifest). (#28)
+- Move from https://github.com/hymkor/binview to https://github.com/hymkor/bine (#31)
 
 v0.7.0
 ------
