@@ -1,6 +1,10 @@
 Release notes
 =============
 
+v0.7.1
+------
+Feb 14, 2026
+
 - go run の活用により、外部ツール不要でビルド・メンテナンスができるよう改善した (`make release`, `make manifest`) (#28)
 - https://github.com/hymkor/binview から https://github.com/hymkor/bine へ移動 (#31)
 
