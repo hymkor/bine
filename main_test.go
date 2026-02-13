@@ -7,7 +7,7 @@ import (
 
 	"github.com/nyaosorg/go-ttyadapter/auto"
 
-	. "github.com/hymkor/binview/internal/large"
+	. "github.com/hymkor/bine/internal/large"
 )
 
 func _insert(exp string) func(*Application) error {

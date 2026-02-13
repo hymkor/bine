@@ -7,7 +7,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/hymkor/binview"
+	"github.com/hymkor/bine"
 )
 
 var version string = "snapshot"

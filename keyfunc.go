@@ -11,8 +11,8 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
 
-	"github.com/hymkor/binview/internal/encoding"
-	"github.com/hymkor/binview/internal/large"
+	"github.com/hymkor/bine/internal/encoding"
+	"github.com/hymkor/bine/internal/large"
 )
 
 const (

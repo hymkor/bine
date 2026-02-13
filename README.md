@@ -2,9 +2,10 @@ Bine - A terminal binary editor
 ================================
 
 <!-- stdout: go run github.com/hymkor/example-into-readme/cmd/badges@master -->
-[![Go Test](https://github.com/hymkor/binview/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/binview/actions/workflows/go.yml)
-[![License](https://img.shields.io/badge/License-MIT-red)](https://github.com/hymkor/binview/blob/master/LICENSE)
-[![Go Reference](https://pkg.go.dev/badge/github.com/hymkor/binview.svg)](https://pkg.go.dev/github.com/hymkor/binview)
+[![Go Test](https://github.com/hymkor/bine/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/bine/actions/workflows/go.yml)
+[![License](https://img.shields.io/badge/License-MIT-red)](https://github.com/hymkor/bine/blob/master/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/hymkor/bine.svg)](https://pkg.go.dev/github.com/hymkor/bine)
+[![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/hymkor/bine)
 <!-- -->
 
 ![ScreenShot](./screenshot.png)
@@ -39,7 +40,7 @@ Install
 
 ### Manual installation
 
-Download the binary package from [Releases](https://github.com/hymkor/binview/releases) and extract the executable.
+Download the binary package from [Releases](https://github.com/hymkor/bine/releases) and extract the executable.
 
 <!-- stdout: go run github.com/hymkor/example-into-readme/cmd/how2install@master -->
 
@@ -51,7 +52,7 @@ brew install eget        # Unix-like systems
 scoop install eget       # Windows
 
 cd (YOUR-BIN-DIRECTORY)
-eget hymkor/binview
+eget hymkor/bine
 ```
 
 [eget]: https://github.com/zyedidia/eget
@@ -59,14 +60,14 @@ eget hymkor/binview
 ### Use [scoop]-installer (Windows only)
 
 ```
-scoop install https://raw.githubusercontent.com/hymkor/binview/master/binview.json
+scoop install https://raw.githubusercontent.com/hymkor/bine/master/bine.json
 ```
 
 or
 
 ```
 scoop bucket add hymkor https://github.com/hymkor/scoop-bucket
-scoop install binview
+scoop install bine
 ```
 
 [scoop]: https://scoop.sh/
@@ -74,10 +75,10 @@ scoop install binview
 ### Use "go install" (requires Go toolchain)
 
 ```
-go install github.com/hymkor/binview@latest
+go install github.com/hymkor/bine/cmd/bine@latest
 ```
 
-Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `binview`.
+Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `bine`.
 <!-- -->
 
 Usage
@@ -152,7 +153,7 @@ Release Notes
 Acknowledgements
 ----------------
 
-- [spiegel-im-spiegel (Spiegel)](https://github.com/spiegel-im-spiegel) - [Issue #1](https://github.com/hymkor/binview/issues/1)
+- [spiegel-im-spiegel (Spiegel)](https://github.com/spiegel-im-spiegel) - [Issue #1](https://github.com/hymkor/bine/issues/1)
 
 Author
 ------

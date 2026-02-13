@@ -17,10 +17,10 @@ import (
 	"github.com/nyaosorg/go-ttyadapter"
 	"github.com/nyaosorg/go-ttyadapter/tty8pe"
 
-	"github.com/hymkor/binview/internal/argf"
-	"github.com/hymkor/binview/internal/encoding"
-	"github.com/hymkor/binview/internal/large"
-	"github.com/hymkor/binview/internal/nonblock"
+	"github.com/hymkor/bine/internal/argf"
+	"github.com/hymkor/bine/internal/encoding"
+	"github.com/hymkor/bine/internal/large"
+	"github.com/hymkor/bine/internal/nonblock"
 )
 
 const LINE_SIZE = 16
