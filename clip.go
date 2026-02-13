@@ -1,4 +1,4 @@
-package main
+package bine
 
 type Clip struct {
 	data []byte

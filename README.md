@@ -1,5 +1,11 @@
-binview - Terminal Binary Editor
+Bine - A terminal binary editor
 ================================
+
+<!-- stdout: go run github.com/hymkor/example-into-readme/cmd/badges@master -->
+[![Go Test](https://github.com/hymkor/binview/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/binview/actions/workflows/go.yml)
+[![License](https://img.shields.io/badge/License-MIT-red)](https://github.com/hymkor/binview/blob/master/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/hymkor/binview.svg)](https://pkg.go.dev/github.com/hymkor/binview)
+<!-- -->
 
 ![ScreenShot](./screenshot.png)
 
@@ -10,7 +16,7 @@ Key Features
   The viewer launches instantly and loads data in the background, allowing immediate interaction even with large files.
 
 * **Supports both files and standard input**
-  `binview` can read binary data not only from files but also from standard input, making it easy to use in pipelines.
+  `bine` can read binary data not only from files but also from standard input, making it easy to use in pipelines.
 
 * **Vi-style navigation**
   Navigation keys follow the familiar `vi` keybindings (`h`, `j`, `k`, `l`, etc.), allowing smooth movement for experienced users.  
@@ -23,10 +29,10 @@ Key Features
   Multi-byte characters are visually grouped based on byte structure. Special code points such as BOMs and control characters (e.g., newlines) are annotated with readable names or symbols, making it easier to understand mixed binary/text content and debug encoding issues.
 
 * **Minimal screen usage**
-  `binview` only uses as many terminal lines as needed (1 line = 16 bytes), without occupying the full screen. This makes it easy to inspect or edit small binary data while still seeing the surrounding terminal output.
+  `bine` only uses as many terminal lines as needed (1 line = 16 bytes), without occupying the full screen. This makes it easy to inspect or edit small binary data while still seeing the surrounding terminal output.
 
 * **Cross-platform**
-  Written in Go, `binview` runs on both Windows and Linux. It should also build and work on other Unix-like systems.
+  Written in Go, `bine` runs on both Windows and Linux. It should also build and work on other Unix-like systems.
 
 Install
 --------
@@ -35,13 +41,22 @@ Install
 
 Download the binary package from [Releases](https://github.com/hymkor/binview/releases) and extract the executable.
 
-### Use "go install"
+<!-- stdout: go run github.com/hymkor/example-into-readme/cmd/how2install@master -->
 
-```
-go install github.com/hymkor/binview@latest
+### Use [eget] installer (cross-platform)
+
+```sh
+brew install eget        # Unix-like systems
+# or
+scoop install eget       # Windows
+
+cd (YOUR-BIN-DIRECTORY)
+eget hymkor/binview
 ```
 
-### Use scoop-installer
+[eget]: https://github.com/zyedidia/eget
+
+### Use [scoop]-installer (Windows only)
 
 ```
 scoop install https://raw.githubusercontent.com/hymkor/binview/master/binview.json
@@ -54,23 +69,34 @@ scoop bucket add hymkor https://github.com/hymkor/scoop-bucket
 scoop install binview
 ```
 
+[scoop]: https://scoop.sh/
+
+### Use "go install" (requires Go toolchain)
+
+```
+go install github.com/hymkor/binview@latest
+```
+
+Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `binview`.
+<!-- -->
+
 Usage
 -----
 
 ```
-$ binview [FILES...]
+$ bine [FILES...]
 ```
 
 or
 
 ```
-$ cat FILE | binview
+$ cat FILE | bine
 ```
 
 Key-binding
 -----------
 
-* `q`, `ESCAPE`  
+* `q`  
     * Quit
 * `h`, `BACKSPACE`, `ARROW-LEFT`, `Ctrl-B`  
     * Move the cursor left
@@ -106,14 +132,16 @@ Key-binding
     * Write changes to file
 * `&`  
     * Jump to a specific address
-* `ALT-U`  
+* `Meta-U`  
     * Change the character encoding to UTF-8 (default)
-* `ALT-A`  
+* `Meta-A`  
     * Change the character encoding to ANSI (the current Windows code page)
-* `ALT-L`  
+* `Meta-L`  
     * Change the character encoding to UTF-16LE
-* `ALT-B`  
+* `Meta-B`  
     * Change the character encoding to UTF-16BE
+
+`Meta` means either `Alt`+`key` or `Esc` followed by key.
 
 Release Notes
 -------------

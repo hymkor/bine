@@ -1,17 +1,18 @@
-package main
+package bine
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 
+	"github.com/nyaosorg/go-inline-animation"
 	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
 
 	"github.com/hymkor/binview/internal/encoding"
 	"github.com/hymkor/binview/internal/large"
-	"github.com/hymkor/binview/internal/nonblock"
 )
 
 const (
@@ -38,7 +39,7 @@ const (
 // keyFuncNext moves the cursor to the the next 16-bytes block.
 func keyFuncNext(this *Application) error {
 	if err := this.cursor.Skip(LINE_SIZE); err != nil {
-		if err != io.EOF {
+		if !errors.Is(err, io.EOF) && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
 	}
@@ -58,11 +59,25 @@ func keyFuncPrevious(this *Application) error {
 }
 
 func keyFuncQuit(this *Application) error {
-	if yesNo(this.tty1, this.out, "Quit Sure ? [y/n]") {
-		io.WriteString(this.out, "\n")
-		return io.EOF
+	if this.dirty {
+		ch, err := ask(this.tty1, this.out, `Quit: Save changes ? ["y": save, "n": quit without saving, other: cancel]`)
+		if err != nil {
+			return err
+		}
+		if ch == "y" || ch == "Y" {
+			newfname, err := writeFile(this.buffer, this.tty1, this.out, this.savePath)
+			if err != nil {
+				this.message = err.Error()
+				return nil
+			}
+			this.dirty = false
+			this.savePath = newfname
+		} else if ch != "n" && ch != "N" {
+			return nil
+		}
 	}
-	return nil
+	io.WriteString(this.out, "\n")
+	return io.EOF
 }
 
 // keyFuncForward moves the cursor to the next one byte.
@@ -165,20 +180,15 @@ func keyFuncRemoveByte(this *Application) error {
 
 var overWritten = map[string]struct{}{}
 
-func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory, f func() bool) (string, error) {
-	worker := nonblock.New(func() (string, error) {
-		return getline(out, prompt, defaultString, history)
-	})
-	result, err := worker.GetOr(f)
-	worker.Close()
-	return result, err
+func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
+	return getline(out, prompt, defaultString, history)
 }
 
 var fnameHistory = simplehistory.New()
 
 func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (string, error) {
 	var err error
-	fname, err = getlineOr(out, "write to>", fname, fnameHistory, func() bool { return buffer.Fetch() == nil })
+	fname, err = getlineOr(out, "write to>", fname, fnameHistory)
 	if err != nil {
 		return "", err
 	}
@@ -200,9 +210,19 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 	if err != nil {
 		return "", err
 	}
-	buffer.WriteTo(fd)
+	end := animation.Dots.Progress(out)
+	defer end()
+
+	_, err1 := buffer.WriteTo(fd)
+	err2 := fd.Close()
+	if err1 != nil {
+		return "", err1
+	}
+	if err2 != nil {
+		return "", err2
+	}
 	fnameHistory.Add(fname)
-	return fname, fd.Close()
+	return fname, nil
 }
 
 func keyFuncWriteFile(this *Application) error {
@@ -221,8 +241,7 @@ var byteHistory = simplehistory.New()
 func keyFuncReplaceByte(this *Application) error {
 	bytes, err := getlineOr(this.out, "replace>",
 		fmt.Sprintf("0x%02X", this.cursor.Value()),
-		byteHistory,
-		func() bool { return this.buffer.Fetch() == nil })
+		byteHistory)
 	if err != nil {
 		this.message = err.Error()
 		return nil
@@ -264,9 +283,7 @@ func gotoAddress(app *Application, address int64) error {
 var addressHistory = simplehistory.New()
 
 func keyFuncGoTo(app *Application) error {
-	addressStr, err := getlineOr(app.out, "Goto Offset>", "0x", addressHistory, func() bool {
-		return app.buffer.Fetch() == nil
-	})
+	addressStr, err := getlineOr(app.out, "Goto Offset>", "0x", addressHistory)
 	if err != nil {
 		app.message = err.Error()
 		return nil
@@ -303,7 +320,7 @@ func keyFuncUtf16BeMode(app *Application) error {
 var expHistory = simplehistory.New()
 
 func readExpression(app *Application, prompt string) (string, error) {
-	exp, err := getlineOr(app.out, prompt, "0x00", expHistory, func() bool { return app.buffer.Fetch() == nil })
+	exp, err := getlineOr(app.out, prompt, "0x00", expHistory)
 	if err != nil {
 		return "", err
 	}
@@ -363,7 +380,6 @@ var jumpTable = map[string]func(this *Application) error{
 	_KEY_ALT_B:  keyFuncUtf16BeMode,
 	"&":         keyFuncGoTo,
 	"q":         keyFuncQuit,
-	_KEY_ESC:    keyFuncQuit,
 	"j":         keyFuncNext,
 	_KEY_DOWN:   keyFuncNext,
 	_KEY_CTRL_N: keyFuncNext,

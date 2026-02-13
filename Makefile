@@ -21,13 +21,13 @@ EXE=$(shell $(GO) env GOEXE)
 
 all:
 	$(GO) fmt ./...
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT)
+	$(SET) "CGO_ENABLED=0" && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
 
 test:
 	$(GO) test -v
 
 _dist:
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT)
+	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
 	zip -9 $(NAME)-$(VERSION)-$(GOOS)-$(GOARCH).zip $(NAME)$(EXE)
 
 dist:
@@ -36,8 +36,16 @@ dist:
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=386"   && $(MAKE) _dist
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=amd64" && $(MAKE) _dist
 
+release:
+	$(GO) run github.com/hymkor/latest-notes@master | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
+
 clean:
 	$(DEL) *.zip $(NAME)$(EXE)
 
 manifest:
-	make-scoop-manifest *-windows-*.zip > $(NAME).json
+	$(GO) run github.com/hymkor/make-scoop-manifest@master -all *-windows-*.zip > $(NAME).json
+
+readme:
+	$(GO) run github.com/hymkor/example-into-readme@master
+
+.PHONY: all test _dist dist clean manifest

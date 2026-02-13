@@ -1,11 +1,11 @@
-package main
+package bine
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -15,7 +15,7 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/nyaosorg/go-ttyadapter"
-	"github.com/nyaosorg/go-ttyadapter/tty8"
+	"github.com/nyaosorg/go-ttyadapter/tty8pe"
 
 	"github.com/hymkor/binview/internal/argf"
 	"github.com/hymkor/binview/internal/encoding"
@@ -64,8 +64,6 @@ const (
 	_RIGHTWARDS_ARROW_TO_BAR                 = '\u21E5' // ->|
 	_RIGHTWARDS_TRIANGLE_HEADED_ARROW_TO_BAR = '\u2B72' // ->|
 )
-
-var version string = "snapshot"
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
@@ -327,15 +325,12 @@ func (app *Application) shiftWindowToSeeCursorLine() {
 	}
 }
 
-func mains(args []string) error {
+func Run(args []string) error {
 	disable := colorable.EnableColorsStdout(nil)
 	if disable != nil {
 		defer disable()
 	}
 	out := colorable.NewColorableStdout()
-
-	fmt.Fprintf(out, "binview %s-%s-%s by %s\n",
-		version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 
 	in, err := argf.New(args)
 	if err != nil {
@@ -343,7 +338,7 @@ func mains(args []string) error {
 	}
 	defer in.Close()
 
-	savePath := "output.new"
+	savePath := ""
 	if len(args) > 0 {
 		savePath, err = filepath.Abs(args[0])
 		if err != nil {
@@ -351,16 +346,27 @@ func mains(args []string) error {
 		}
 	}
 
-	app, err := NewApplication(&tty8.Tty{}, in, out, savePath)
+	app, err := NewApplication(&tty8pe.Tty{}, in, out, savePath)
 	if err != nil {
 		return err
 	}
 	defer app.Close()
 
-	keyWorker := nonblock.New(func() (string, error) { return app.tty1.GetKey() })
+	// nonblock runs data reading in the background while waiting for key input.
+	// If Fetch is called directly, it may run concurrently and also bypass
+	// buffered data already queued in keyWorker, which can break data order.
+	//
+	// Therefore, all reads are centralized in keyWorker, and this goroutine
+	// accesses data only via keyWorker.Fetch / TryFetch.
+	keyWorker := nonblock.New(app.tty1.GetKey, app.buffer.Fetch)
 	defer keyWorker.Close()
+	app.buffer.Fetch = keyWorker.Fetch
+	app.buffer.TryFetch = func() ([]byte, error) {
+		return keyWorker.TryFetch(time.Second / 100)
+	}
 
 	var lastWidth, lastHeight int
+	autoRepaint := true
 	for {
 		app.screenWidth, app.screenHeight, err = app.tty1.Size()
 		if err != nil {
@@ -373,7 +379,7 @@ func mains(args []string) error {
 			io.WriteString(app.out, _ANSI_CURSOR_OFF)
 		}
 		lf, err := app.View()
-		if err != nil {
+		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
 		if app.buffer.Len() <= 0 {
@@ -393,22 +399,30 @@ func mains(args []string) error {
 		const interval = 10
 		displayUpdateTime := time.Now().Add(time.Second / interval)
 
-		ch, err := keyWorker.GetOr(func() bool {
-			err := app.buffer.Fetch()
-			if err != nil && err != io.EOF {
-				return false
-			}
+		ch, err := keyWorker.GetOr(func(data []byte, err error) (cont bool) {
+			cont = app.buffer.Store(data, err)
 			if app.message != "" {
-				return err == nil
+				return
 			}
 			if err == io.EOF || time.Now().After(displayUpdateTime) {
 				app.out.Write([]byte{'\r'})
+				if autoRepaint {
+					if lf > 0 {
+						fmt.Fprintf(app.out, "\x1B[%dA", lf)
+					}
+					lf, _ = app.View()
+					io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
+					lf++
+					if app.buffer.Len() >= int64(app.screenHeight*LINE_SIZE) {
+						autoRepaint = false
+					}
+				}
 				app.printDefaultStatusBar()
 				displayUpdateTime = time.Now().Add(time.Second / interval)
 			}
-			return err == nil
+			return
 		})
-		if err != nil {
+		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
 		app.message = ""
@@ -428,12 +442,5 @@ func mains(args []string) error {
 		} else {
 			io.WriteString(app.out, "\r")
 		}
-	}
-}
-
-func main() {
-	if err := mains(os.Args[1:]); err != nil && err != io.EOF {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
 	}
 }

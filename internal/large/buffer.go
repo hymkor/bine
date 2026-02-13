@@ -1,60 +1,62 @@
 package large
 
 import (
-	"bufio"
-	"container/list"
+	"errors"
 	"io"
+	"os"
 )
 
-type _Block = []byte
-
-var ALLOC_SIZE = 4096
+type chunk = []byte
 
 type Buffer struct {
-	lines   *list.List
-	reader  *bufio.Reader
-	allsize int64
+	*Storage
+	Fetch    func() ([]byte, error)
+	TryFetch func() ([]byte, error)
 }
 
 func NewBuffer(r io.Reader) *Buffer {
+	f := &bufferFetch{
+		reader:    r,
+		allocSize: 8,
+	}
 	return &Buffer{
-		lines:   list.New(),
-		reader:  bufio.NewReader(r),
-		allsize: 0,
+		Storage:  newStorage(),
+		Fetch:    f.fetch,
+		TryFetch: f.fetch,
 	}
 }
 
-func (b *Buffer) Len() int64 {
-	return b.allsize
-}
-
-func (b *Buffer) Fetch() error {
-	if b.reader == nil {
-		return io.EOF
-	}
-	buffer := make([]byte, ALLOC_SIZE)
-	n, err := b.reader.Read(buffer)
-
-	if n > 0 {
-		b.lines.PushBack(_Block(buffer[:n]))
-		b.allsize += int64(n)
-	}
-	if err != nil {
-		b.reader = nil
-	}
+func (b *Buffer) fetchAndStore() error {
+	data, err := b.Fetch()
+	b.Store(data, err)
 	return err
 }
 
-func (b *Buffer) ReadAll() {
-	for b.Fetch() == nil {
+func (b *Buffer) tryFetchAndStore() error {
+	data, err := b.TryFetch()
+	b.Store(data, err)
+	return err
+}
+
+func (b *Buffer) ReadAll() error {
+	for {
+		err := b.fetchAndStore()
+		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
 	}
 }
 
 func (b *Buffer) WriteTo(w io.Writer) (int64, error) {
-	b.ReadAll()
+	if err := b.ReadAll(); err != nil {
+		return 0, err
+	}
 	n := int64(0)
 	for p := b.lines.Front(); p != nil; p = p.Next() {
-		m, err := w.Write(p.Value.(_Block))
+		m, err := w.Write(p.Value.(chunk))
 		n += int64(m)
 		if err != nil {
 			return n, err
