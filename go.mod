@@ -1,4 +1,4 @@
-module github.com/hymkor/binview
+module github.com/hymkor/bine
 
 go 1.20
 
