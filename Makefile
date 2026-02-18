@@ -36,6 +36,9 @@ dist:
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=386"   && $(MAKE) _dist
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=amd64" && $(MAKE) _dist
 
+bump:
+	$(GO) run github.com/hymkor/latest-notes@latest -gosrc "main" -suffix "-goinstall" > cmd/bine/version.go
+
 release:
 	$(GO) run github.com/hymkor/latest-notes@master | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
 
