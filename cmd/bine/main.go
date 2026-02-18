@@ -10,8 +10,6 @@ import (
 	"github.com/hymkor/bine"
 )
 
-var version string = "snapshot"
-
 func main() {
 	fmt.Fprintf(os.Stderr, "Bine %s-%s-%s\n", version, runtime.GOOS, runtime.GOARCH)
 	if err := bine.Run(os.Args[1:]); err != nil && !errors.Is(err, io.EOF) {

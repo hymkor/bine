@@ -1,6 +1,9 @@
 Release notes
 =============
 
+- Fixed an issue where the version string was empty when built without GNU Make.  
+  The version string is now updated via `make bump` during the release process. (#33)
+
 v0.7.1
 ------
 Feb 14, 2026
