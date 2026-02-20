@@ -3,6 +3,7 @@ Changelog
 
 - Fixed an issue where the version string was empty when built without GNU Make.  
   The version string is now updated via `make bump` during the release process. (#33)
+- Rename release note files to CHANGELOG.md and CHANGELOG\_ja.md. (#34)
 
 v0.7.1
 ------
