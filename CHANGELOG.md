@@ -1,4 +1,4 @@
-Release notes
+Changelog
 =============
 
 - Fixed an issue where the version string was empty when built without GNU Make.  

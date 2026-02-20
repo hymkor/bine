@@ -1,4 +1,4 @@
-Release notes
+Changelog
 =============
 
 - GNU Make なしでビルドした場合に、バージョン文字列が空になってしまう問題を修正  
