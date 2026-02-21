@@ -144,11 +144,11 @@ Key-binding
 
 `Meta` means either `Alt`+`key` or `Esc` followed by key.
 
-Release Notes
+Changelog
 -------------
 
-- [English](/release_note_en.md)
-- [Japanese](/release_note_ja.md)
+- [English](/CHANGELOG.md)
+- [Japanese](/CHANGELOG_ja.md)
 
 Acknowledgements
 ----------------

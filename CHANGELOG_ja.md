@@ -1,8 +1,9 @@
-Release notes
+Changelog
 =============
 
 - GNU Make なしでビルドした場合に、バージョン文字列が空になってしまう問題を修正  
   今後、バージョンアップ時に `make bump` を実行する (#33)
+- リリースノートのファイル名を CHANGELOG.md と CHANGELOG\_JA.md へリネーム (#34)
 
 v0.7.1
 ------
