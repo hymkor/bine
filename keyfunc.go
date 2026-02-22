@@ -13,6 +13,7 @@ import (
 
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
+	"github.com/hymkor/bine/internal/safewrite"
 )
 
 const (
@@ -178,8 +179,6 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 }
 
-var overWritten = map[string]struct{}{}
-
 func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
 	return getline(out, prompt, defaultString, history)
 }
@@ -192,21 +191,10 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 	if err != nil {
 		return "", err
 	}
-	fd, err := os.OpenFile(fname, os.O_WRONLY|os.O_EXCL|os.O_CREATE, 0666)
-	if os.IsExist(err) {
-		if _, ok := overWritten[fname]; ok {
-			os.Remove(fname)
-		} else {
-			if !yesNo(tty1, out, "Overwrite as \""+fname+"\" [y/n] ?") {
-				return "", err
-			}
-			backupName := fname + "~"
-			os.Remove(backupName)
-			os.Rename(fname, backupName)
-			overWritten[fname] = struct{}{}
-		}
-		fd, err = os.OpenFile(fname, os.O_WRONLY|os.O_EXCL|os.O_CREATE, 0666)
+	prompt := func() bool {
+		return yesNo(tty1, out, "Overwrite as \""+fname+"\" [y/n] ?")
 	}
+	fd, err := safewrite.Open(fname, prompt)
 	if err != nil {
 		return "", err
 	}
