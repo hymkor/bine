@@ -5,6 +5,10 @@ Changelog
   今後、バージョンアップ時に `make bump` を実行する (#33)
 - リリースノートのファイル名を CHANGELOG.md と CHANGELOG\_JA.md へリネーム (#34)
 - ファイル保存時に出力が完了するまで一時ファイル名を使い、元のファイルが不完全な状態になる時間をゼロとした (#35)
+- 保存に時間がかかった時、テキストアニメの消去位置が狂う問題を修正 ([go-inline-animation#6], [go-inline-animation#7], #36)
+
+[go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
+[go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
 
 v0.7.1
 ------
