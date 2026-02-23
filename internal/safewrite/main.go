@@ -16,6 +16,11 @@ type writer struct {
 	perm   fs.FileMode
 }
 
+type Info struct {
+	Name string
+	Mode fs.FileMode
+}
+
 var (
 	overwritten          = make(map[string]struct{})
 	ErrOverWriteRejected = errors.New("overwrite rejected")
@@ -23,7 +28,7 @@ var (
 
 func Open(
 	name string,
-	confirmOverwrite func() bool,
+	confirmOverwrite func(*Info) bool,
 ) (io.WriteCloser, error) {
 
 	info, err := os.Stat(name)
@@ -48,7 +53,7 @@ func Open(
 		return fd, err
 	}
 
-	if !confirmOverwrite() {
+	if !confirmOverwrite(&Info{Name: name, Mode: mode}) {
 		return nil, ErrOverWriteRejected
 	}
 

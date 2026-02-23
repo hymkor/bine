@@ -191,9 +191,10 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 	if err != nil {
 		return "", err
 	}
-	prompt := func() bool {
-		return yesNo(tty1, out, "Overwrite as \""+fname+"\" [y/n] ?")
+	prompt := func(info *safewrite.Info) bool {
+		return yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
+
 	fd, err := safewrite.Open(fname, prompt)
 	if err != nil {
 		return "", err

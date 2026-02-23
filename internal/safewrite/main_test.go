@@ -7,7 +7,7 @@ import (
 )
 
 func TestOpenWrite_DevNull(t *testing.T) {
-	w, err := Open(os.DevNull, func() bool {
+	w, err := Open(os.DevNull, func(*Info) bool {
 		t.Fatal("confirmOverwrite should not be called for device")
 		return false
 	})
@@ -28,7 +28,7 @@ func TestOpenWrite_InvalidPath(t *testing.T) {
 	dir := t.TempDir()
 	badPath := filepath.Join(dir, "no-such-dir", "file.bin")
 
-	_, err := Open(badPath, func() bool { return true })
+	_, err := Open(badPath, func(*Info) bool { return true })
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -38,7 +38,7 @@ func TestOpenWrite_CreateNewFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "new.bin")
 
-	w, err := Open(path, func() bool {
+	w, err := Open(path, func(*Info) bool {
 		t.Fatal("confirmOverwrite should not be called")
 		return false
 	})
@@ -75,7 +75,7 @@ func TestOpenWrite_OverwriteWithBackup(t *testing.T) {
 		t.Fatalf("setup failed: %v", err)
 	}
 
-	w, err := Open(path, func() bool { return true })
+	w, err := Open(path, func(*Info) bool { return true })
 	if err != nil {
 		t.Fatalf("openWrite failed: %v", err)
 	}
