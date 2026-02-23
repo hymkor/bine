@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -31,7 +32,8 @@ func Open(
 		return nil, err
 	}
 
-	if info.Mode()&os.ModeDevice != 0 {
+	mode := info.Mode()
+	if mode&os.ModeDevice != 0 {
 		fd, err := os.OpenFile(name, os.O_WRONLY, 0666)
 		if err != nil {
 			err = fmt.Errorf("OpenFile %q: %w", name, err)
@@ -55,6 +57,7 @@ func Open(
 		File:   tmp,
 		target: name,
 		tmp:    tmp.Name(),
+		perm:   mode.Perm(),
 	}, nil
 }
 
@@ -62,10 +65,14 @@ type replaceWriter struct {
 	*os.File
 	target string
 	tmp    string
+	perm   fs.FileMode
 }
 
 func (w *replaceWriter) Close() error {
 	if err := w.File.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(w.tmp, w.perm); err != nil {
 		return err
 	}
 	backup := w.target + "~"
