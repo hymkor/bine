@@ -5,6 +5,10 @@ Changelog
   The version string is now updated via `make bump` during the release process. (#33)
 - Rename release note files to CHANGELOG.md and CHANGELOG\_ja.md. (#34)
 - Changed file saving to use a temporary file until writing completes, eliminating any window where the original file could be left in a partial state. (#35)
+- Fixed an issue where the progress animation was cleared at the wrong position during long save operations. ([go-inline-animation#6], [go-inline-animation#7], #36)
+
+[go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
+[go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
 
 v0.7.1
 ------
