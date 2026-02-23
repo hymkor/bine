@@ -71,7 +71,6 @@ func (w *replaceWriter) Close() error {
 	backup := w.target + "~"
 	if _, ok := overwritten[w.target]; !ok {
 		overwritten[w.target] = struct{}{}
-		_ = os.Remove(backup)
 		if err := os.Rename(w.target, backup); err != nil {
 			return err
 		}
