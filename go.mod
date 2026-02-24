@@ -3,6 +3,7 @@ module github.com/hymkor/bine
 go 1.20
 
 require (
+	github.com/hymkor/go-safewrite v0.1.0
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/nyaosorg/go-inline-animation v0.3.1
