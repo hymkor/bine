@@ -192,7 +192,7 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 		return "", err
 	}
 	prompt := func(info *safewrite.Info) bool {
-		if (info.Mode & 0200) == 0 {
+		if info.ReadOnly() {
 			if yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?") {
 				return true
 			}
