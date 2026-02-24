@@ -223,6 +223,13 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 					filepath.Base(e.Backup),
 					filepath.Base(e.Tmp))
 		}
+		var re *safewrite.ReplaceError
+		if errors.As(err2, &re) {
+			return "",
+				fmt.Errorf("Failed to replace %q to %q",
+					filepath.Base(re.Tmp),
+					filepath.Base(re.Target))
+		}
 		return "", err2
 	}
 	fnameHistory.Add(fname)
