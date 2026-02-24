@@ -6,6 +6,8 @@ Changelog
 - Rename release note files to CHANGELOG.md and CHANGELOG\_ja.md. (#34)
 - Changed file saving to use a temporary file until writing completes, eliminating any window where the original file could be left in a partial state. (#35)
 - Fixed an issue where the progress animation was cleared at the wrong position during long save operations. ([go-inline-animation#6], [go-inline-animation#7], #36)
+- Indicate READONLY files explicitly when prompting for overwrite confirmation (#37)
+- Preserve original file permissions when overwriting files (#37)
 
 [go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
 [go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
