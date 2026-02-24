@@ -13,7 +13,7 @@ import (
 
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
-	"github.com/hymkor/bine/internal/safewrite"
+	"github.com/hymkor/go-safewrite"
 )
 
 const (
