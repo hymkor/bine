@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/nyaosorg/go-inline-animation"
@@ -214,6 +215,14 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 		return "", err1
 	}
 	if err2 != nil {
+		var e *safewrite.BackupError
+		if errors.As(err2, &e) {
+			return "",
+				fmt.Errorf("Failed to backup %q to %q (tmp: %q)",
+					filepath.Base(e.Target),
+					filepath.Base(e.Backup),
+					filepath.Base(e.Tmp))
+		}
 		return "", err2
 	}
 	fnameHistory.Add(fname)
