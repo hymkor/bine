@@ -238,6 +238,9 @@ func writeFile(app *Application) (string, error) {
 		return "", err2
 	}
 	fnameHistory.Add(fname)
+	app.registerOnClose(fname, func() {
+		safewrite.RestorePerm(fd)
+	})
 	return fname, nil
 }
 
