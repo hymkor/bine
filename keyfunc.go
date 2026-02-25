@@ -198,6 +198,9 @@ func writeFile(app *Application) (string, error) {
 		return "", err
 	}
 	prompt := func(info *safewrite.Info) bool {
+		if info.Status != safewrite.NONE {
+			return true
+		}
 		if info.ReadOnly() {
 			if yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?") {
 				return true
