@@ -211,6 +211,7 @@ type Application struct {
 	cache        map[int]string
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application)
+	onClose      map[string]func()
 }
 
 func (app *Application) dataHeight() int {
@@ -239,6 +240,7 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 		out:       out,
 		buffer:    large.NewBuffer(in),
 		clipBoard: NewClip(),
+		onClose:   make(map[string]func()),
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -266,7 +268,17 @@ func (app *Application) Close() error {
 	if app.tty1 != nil {
 		app.tty1.Close()
 	}
+	for _, f := range app.onClose {
+		f()
+	}
 	return nil
+}
+
+func (app *Application) registerOnClose(name string, f func()) {
+	if _, ok := app.onClose[name]; ok {
+		return
+	}
+	app.onClose[name] = f
 }
 
 var unicodeName = map[rune]string{

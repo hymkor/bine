@@ -67,7 +67,7 @@ func keyFuncQuit(this *Application) error {
 			return err
 		}
 		if ch == "y" || ch == "Y" {
-			newfname, err := writeFile(this.buffer, this.tty1, this.out, this.savePath)
+			newfname, err := writeFile(this)
 			if err != nil {
 				this.message = err.Error()
 				return nil
@@ -186,7 +186,12 @@ func getlineOr(out io.Writer, prompt string, defaultString string, history readl
 
 var fnameHistory = simplehistory.New()
 
-func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (string, error) {
+func writeFile(app *Application) (string, error) {
+	buffer := app.buffer
+	tty1 := app.tty1
+	out := app.out
+	fname := app.savePath
+
 	var err error
 	fname, err = getlineOr(out, "write to>", fname, fnameHistory)
 	if err != nil {
@@ -233,11 +238,14 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 		return "", err2
 	}
 	fnameHistory.Add(fname)
+	app.registerOnClose(fname, func() {
+		safewrite.RestorePerm(fd)
+	})
 	return fname, nil
 }
 
 func keyFuncWriteFile(this *Application) error {
-	newfname, err := writeFile(this.buffer, this.tty1, this.out, this.savePath)
+	newfname, err := writeFile(this)
 	if err != nil {
 		this.message = err.Error()
 	} else {
