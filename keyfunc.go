@@ -15,6 +15,7 @@ import (
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
 	"github.com/hymkor/go-safewrite"
+	"github.com/hymkor/go-safewrite/perm"
 )
 
 const (
@@ -241,6 +242,7 @@ func writeFile(app *Application) (string, error) {
 		return "", err2
 	}
 	fnameHistory.Add(fname)
+	perm.Track(fd)
 	return fname, nil
 }
 

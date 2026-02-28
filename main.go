@@ -21,6 +21,7 @@ import (
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
 	"github.com/hymkor/bine/internal/nonblock"
+	"github.com/hymkor/go-safewrite/perm"
 )
 
 const LINE_SIZE = 16
@@ -326,6 +327,8 @@ func (app *Application) shiftWindowToSeeCursorLine() {
 }
 
 func Run(args []string) error {
+	defer perm.RestoreAll()
+
 	disable := colorable.EnableColorsStdout(nil)
 	if disable != nil {
 		defer disable()
