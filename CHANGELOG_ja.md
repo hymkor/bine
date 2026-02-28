@@ -7,7 +7,7 @@ Changelog
 - ファイル保存時に出力が完了するまで一時ファイル名を使い、元のファイルが不完全な状態になる時間をゼロとした (#35)
 - 保存に時間がかかった時、テキストアニメの消去位置が狂う問題を修正 ([go-inline-animation#6], [go-inline-animation#7], #36)
 - 上書き確認時に、READONLY 属性のファイルであることを明示するようにした (#37)
-- 上書き保存時に元ファイルのパーミッションが維持されない問題を修正 (#37)
+- 上書き保存時に元ファイルのパーミッションが維持されない問題を修正 (#37,#42)
 
 [go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
 [go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7

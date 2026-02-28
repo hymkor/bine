@@ -21,6 +21,7 @@ import (
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
 	"github.com/hymkor/bine/internal/nonblock"
+	"github.com/hymkor/go-safewrite/perm"
 )
 
 const LINE_SIZE = 16
@@ -211,7 +212,6 @@ type Application struct {
 	cache        map[int]string
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application)
-	onClose      map[string]func()
 }
 
 func (app *Application) dataHeight() int {
@@ -240,7 +240,6 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 		out:       out,
 		buffer:    large.NewBuffer(in),
 		clipBoard: NewClip(),
-		onClose:   make(map[string]func()),
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -268,17 +267,7 @@ func (app *Application) Close() error {
 	if app.tty1 != nil {
 		app.tty1.Close()
 	}
-	for _, f := range app.onClose {
-		f()
-	}
 	return nil
-}
-
-func (app *Application) registerOnClose(name string, f func()) {
-	if _, ok := app.onClose[name]; ok {
-		return
-	}
-	app.onClose[name] = f
 }
 
 var unicodeName = map[rune]string{
@@ -338,6 +327,8 @@ func (app *Application) shiftWindowToSeeCursorLine() {
 }
 
 func Run(args []string) error {
+	defer perm.RestoreAll()
+
 	disable := colorable.EnableColorsStdout(nil)
 	if disable != nil {
 		defer disable()
