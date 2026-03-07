@@ -94,6 +94,23 @@ or
 $ cat FILE | bine
 ```
 
+Modes
+-----
+
+The editor has two modes: View mode and Edit mode.
+
+* View mode (default)
+    * The file can be navigated safely without modifying data.
+    * Most keys are interpreted as commands.
+* Edit mode
+    * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
+    * The first digit replaces the high nibble and the second digit replaces the low nibble.
+    * After two digits are entered, the cursor moves to the next byte.
+
+Most command keys work in both modes.  
+In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
+Press `R` to toggle between View mode and Edit mode.
+
 Key-binding
 -----------
 
@@ -109,18 +126,23 @@ Key-binding
     * Move the cursor right
 * `0` (zero), `^`, `Ctrl-A`  
     * Move the cursor to the beginning of the current line
+    * `0` is available in View mode only
 * `$`, `Ctrl-E`  
     * Move the cursor to the end of the current line
 * `<`  
     * Move the cursor to the beginning of the file
 * `>`, `G`  
     * Move the cursor to the end of the file
-* `r`  
+* `r`
     * Replace the byte under the cursor
+* `R`
+    * Toggle between View mode and Edit mode
+    * In Edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
 * `i`  
     * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
 * `a`  
     * Append data (e.g., `0xFF`, `U+0000`, `"string"`)
+    * Available in View mode only
 * `x`, `DEL`  
     * Delete and yank the byte under the cursor
 * `p`  
