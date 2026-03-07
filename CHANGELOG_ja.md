@@ -1,5 +1,5 @@
 Changelog
-=============
+=========
 
 - GNU Make なしでビルドした場合に、バージョン文字列が空になってしまう問題を修正  
   今後、バージョンアップ時に `make bump` を実行する (#33)
@@ -8,6 +8,7 @@ Changelog
 - 保存に時間がかかった時、テキストアニメの消去位置が狂う問題を修正 ([go-inline-animation#6], [go-inline-animation#7], #36)
 - 上書き確認時に、READONLY 属性のファイルであることを明示するようにした (#37)
 - 上書き保存時に元ファイルのパーミッションが維持されない問題を修正 (#37,#42)
+- カーソル上の16進数を直接書き換える Editモード を追加。従来のモード（Viewモード）と `Shift+R` で切り替えるようにした (#43)
 
 [go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
 [go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
