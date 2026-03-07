@@ -66,31 +66,56 @@ const (
 	_RIGHTWARDS_TRIANGLE_HEADED_ARROW_TO_BAR = '\u2B72' // ->|
 )
 
+func makeHexOne(pointer *large.Pointer, cursorAddress int64, m editModeType, out *strings.Builder) {
+	value := pointer.Value()
+	var on, off string
+	i := pointer.Address() % 16
+	if ((i >> 2) & 1) == 0 {
+		on = _CELL1_COLOR_ON
+		off = _CELL1_COLOR_OFF
+	} else {
+		on = _CELL2_COLOR_ON
+		off = _CELL2_COLOR_OFF
+	}
+	if pointer.Address() == cursorAddress {
+		if m == editUpperMode {
+			fmt.Fprintf(out, "%s%1X%s%s%1X%s",
+				_CURSOR_COLOR_ON,
+				(value>>4)&15,
+				_CURSOR_COLOR_OFF,
+				on,
+				value&15,
+				off)
+			return
+		} else if m == editLowerMode {
+			fmt.Fprintf(out, "%s%1X%s%s%1X%s",
+				on,
+				(value>>4)&15,
+				off,
+				_CURSOR_COLOR_ON,
+				value&15,
+				_CURSOR_COLOR_OFF)
+			return
+		}
+		on = _CURSOR_COLOR_ON
+		off = _CURSOR_COLOR_OFF
+	}
+	fmt.Fprintf(out, "%s%02X%s", on, value, off)
+}
+
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
-func makeHexPart(pointer *large.Pointer, cursorAddress int64, out *strings.Builder) bool {
+func makeHexPart(pointer *large.Pointer, cursorAddress int64, mode editModeType, out *strings.Builder) bool {
 	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
-	var fieldSeperator string
 	for i := 0; i < LINE_SIZE; i++ {
-		var on, off string
-		if pointer.Address() == cursorAddress {
-			on = _CURSOR_COLOR_ON
-			off = _CURSOR_COLOR_OFF
-		} else if ((i >> 2) & 1) == 0 {
-			on = _CELL1_COLOR_ON
-			off = _CELL1_COLOR_OFF
-		} else {
-			on = _CELL2_COLOR_ON
-			off = _CELL2_COLOR_OFF
-		}
-		fmt.Fprintf(out, "%s%s%02X%s", fieldSeperator, on, pointer.Value(), off)
+		makeHexOne(pointer, cursorAddress, mode, out)
 		if err := pointer.Next(); err != nil {
 			for ; i < LINE_SIZE-1; i++ {
 				out.WriteString("   ")
 			}
 			return false
 		}
-		fieldSeperator = " "
+		out.WriteByte(' ')
 	}
 	return true
 }
@@ -156,7 +181,7 @@ func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress 
 	return true
 }
 
-func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress int64) (string, bool) {
+func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress int64, mode editModeType) (string, bool) {
 	var out strings.Builder
 	off := ""
 	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
@@ -165,8 +190,7 @@ func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress 
 	}
 
 	asciiPointer := *pointer
-	hasNextLine := makeHexPart(pointer, cursorAddress, &out)
-	out.WriteByte(' ')
+	hasNextLine := makeHexPart(pointer, cursorAddress, mode, &out)
 	makeAsciiPart(enc, &asciiPointer, cursorAddress, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
@@ -182,7 +206,7 @@ func (app *Application) View() (int, error) {
 	cursor := app.window.Clone()
 	cursorAddress := app.cursor.Address()
 	for {
-		line, cont := makeLineImage(app.encoding, cursor, cursorAddress)
+		line, cont := makeLineImage(app.encoding, cursor, cursorAddress, app.editMode)
 
 		if f := app.cache[count]; f != line {
 			io.WriteString(out, line)
@@ -195,6 +219,14 @@ func (app *Application) View() (int, error) {
 		io.WriteString(out, "\r\n") // "\r" is for Linux and go-tty
 	}
 }
+
+type editModeType int
+
+const (
+	viewMode editModeType = iota
+	editUpperMode
+	editLowerMode
+)
 
 type Application struct {
 	tty1         ttyadapter.Tty
@@ -212,6 +244,7 @@ type Application struct {
 	cache        map[int]string
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application)
+	editMode     editModeType
 }
 
 func (app *Application) dataHeight() int {
@@ -284,6 +317,11 @@ func (app *Application) printDefaultStatusBar() {
 		io.WriteString(app.out, "*")
 	} else {
 		io.WriteString(app.out, " ")
+	}
+	if app.editMode == viewMode {
+		io.WriteString(app.out, "View:")
+	} else {
+		io.WriteString(app.out, "Edit:")
 	}
 	fmt.Fprintf(app.out, "[%s]", app.encoding.ModeString())
 
@@ -429,11 +467,23 @@ func Run(args []string) error {
 			return err
 		}
 		app.message = ""
+
+		if app.editMode != viewMode {
+			if index := strings.Index("0123456789abcdef", ch); index >= 0 {
+				if err := keyFuncReplaceInline(app, byte(index)); err != nil {
+					return err
+				}
+				goto skip
+			} else {
+				app.editMode = editUpperMode
+			}
+		}
 		if hander, ok := jumpTable[ch]; ok {
 			if err := hander(app); err != nil {
 				return err
 			}
 		}
+	skip:
 		if app.buffer.Len() <= 0 {
 			return nil
 		}

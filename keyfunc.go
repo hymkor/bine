@@ -391,6 +391,38 @@ func keyFuncUndo(app *Application) error {
 	return nil
 }
 
+func keyFuncReplaceInline(app *Application, n byte) error {
+	address := app.cursor.Address()
+	orgValue := app.cursor.Value()
+	orgDirty := app.dirty
+
+	if app.editMode == editUpperMode {
+		app.cursor.SetValue((orgValue &^ 0xF0) | (n << 4))
+		app.editMode = editLowerMode
+	} else {
+		app.cursor.SetValue((orgValue &^ 0x0F) | (n & 0xF))
+		app.editMode = editUpperMode
+		app.cursor.Next()
+	}
+	undo := func(ap *Application) {
+		p := large.NewPointerAt(address, ap.buffer)
+		p.SetValue(orgValue)
+		ap.dirty = orgDirty
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
+	return nil
+}
+
+func keyFuncChangeMode(app *Application) error {
+	if app.editMode == viewMode {
+		app.editMode = editUpperMode
+	} else {
+		app.editMode = viewMode
+	}
+	return nil
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
@@ -430,4 +462,5 @@ var jumpTable = map[string]func(this *Application) error{
 	"w":         keyFuncWriteFile,
 	"r":         keyFuncReplaceByte,
 	_KEY_CTRL_L: keyFuncRepaint,
+	"R":         keyFuncChangeMode,
 }
