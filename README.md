@@ -94,23 +94,6 @@ or
 $ cat FILE | bine
 ```
 
-Modes
------
-
-The editor has two modes: View mode and Edit mode.
-
-* View mode (default)
-    * The file can be navigated safely without modifying data.
-    * Most keys are interpreted as commands.
-* Edit mode
-    * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
-    * The first digit replaces the high nibble and the second digit replaces the low nibble.
-    * After two digits are entered, the cursor moves to the next byte.
-
-Most command keys work in both modes.  
-In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
-Press `R` to toggle between View mode and Edit mode.
-
 Key-binding
 -----------
 
@@ -136,7 +119,7 @@ Key-binding
 * `r`
     * Replace the byte under the cursor
 * `R`
-    * Toggle between View mode and Edit mode
+    * Toggle between View mode and Edit mode. (see "Modes" below)
     * In Edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
 * `i`  
     * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
@@ -166,11 +149,36 @@ Key-binding
 
 `Meta` means either `Alt`+`key` or `Esc` followed by key.
 
+Modes
+-----
+
+The editor has two modes: View mode and Edit mode.
+
+* View mode (default)
+    * The file can be navigated safely without modifying data.
+    * Most keys are interpreted as commands.
+* Edit mode
+    * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
+    * The first digit replaces the high nibble and the second digit replaces the low nibble.
+    * After two digits are entered, the cursor moves to the next byte.
+
+Most command keys work in both modes.  
+In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
+Press `R` to toggle between View mode and Edit mode.
+
 Changelog
--------------
+---------
 
 - [English](/CHANGELOG.md)
 - [Japanese](/CHANGELOG_ja.md)
+
+Contributing
+------------
+
+- Bug reports and improvement suggestions are welcome. You may write them in either English or Japanese.
+- Please write comments in the code and commit messages in English.
+- If a `develop` branch exists at the time of your pull request, please target it. Otherwise, `master` is fine.
+- Test code and documentation updates that accompany code changes are appreciated, but not required. They can be added later if necessary.
 
 Acknowledgements
 ----------------
