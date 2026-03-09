@@ -427,6 +427,7 @@ var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
 	"a":         keyFuncAppendExp,
+	"A":         keyFuncAppendExp,
 	_KEY_ALT_A:  keyFuncDbcsMode,
 	_KEY_ALT_U:  keyFuncUtf8Mode,
 	_KEY_ALT_L:  keyFuncUtf16LeMode,
