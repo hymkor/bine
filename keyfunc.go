@@ -50,8 +50,14 @@ func keyFuncNext(this *Application) error {
 }
 
 // keyFuncBackword move the cursor to the previous byte.
-func keyFuncBackword(this *Application) error {
-	this.cursor.Prev()
+func keyFuncBackword(app *Application) error {
+	if app.editMode == editLowerMode {
+		app.editMode = editUpperMode
+		return nil
+	} else if app.editMode == editUpperMode {
+		app.editMode = editLowerMode
+	}
+	app.cursor.Prev()
 	return nil
 }
 
@@ -84,38 +90,57 @@ func keyFuncQuit(this *Application) error {
 }
 
 // keyFuncForward moves the cursor to the next one byte.
-func keyFuncForward(this *Application) error {
-	this.cursor.Next()
+func keyFuncForward(app *Application) error {
+	if app.editMode == editUpperMode {
+		app.editMode = editLowerMode
+	} else if app.editMode == editLowerMode {
+		app.cursor.Next()
+		app.editMode = editUpperMode
+	} else {
+		app.cursor.Next()
+	}
 	return nil
 }
 
 // keyFuncGoBeginOfLine move the cursor the the top of the 16bytes-block.
-func keyFuncGoBeginOfLine(this *Application) error {
-	n := this.cursor.Address() % LINE_SIZE
+func keyFuncGoBeginOfLine(app *Application) error {
+	n := app.cursor.Address() % LINE_SIZE
 	if n > 0 {
-		this.cursor.Rewind(n)
+		app.cursor.Rewind(n)
+	}
+	if app.editMode == editLowerMode {
+		app.editMode = editUpperMode
 	}
 	return nil
 }
 
 // keyFuncGoEndOfLine move the cursor to the end of the current 16 byte block.
-func keyFuncGoEndOfLine(this *Application) error {
-	n := LINE_SIZE - this.cursor.Address()%LINE_SIZE - 1
+func keyFuncGoEndOfLine(app *Application) error {
+	n := LINE_SIZE - app.cursor.Address()%LINE_SIZE - 1
 	if n > 0 {
-		this.cursor.Skip(n)
+		app.cursor.Skip(n)
+	}
+	if app.editMode == editLowerMode {
+		app.editMode = editUpperMode
 	}
 	return nil
 }
 
-func keyFuncGoBeginOfFile(this *Application) error {
-	this.cursor = large.NewPointer(this.buffer)
-	this.window = large.NewPointer(this.buffer)
+func keyFuncGoBeginOfFile(app *Application) error {
+	app.cursor = large.NewPointer(app.buffer)
+	app.window = large.NewPointer(app.buffer)
+	if app.editMode == editLowerMode {
+		app.editMode = editUpperMode
+	}
 	return nil
 }
 
 // keyFuncGoEndOfFile moves the cursor to the end of the file.
-func keyFuncGoEndOfFile(this *Application) error {
-	this.cursor.GoEndOfFile()
+func keyFuncGoEndOfFile(app *Application) error {
+	app.cursor.GoEndOfFile()
+	if app.editMode == editLowerMode {
+		app.editMode = editUpperMode
+	}
 	return nil
 }
 

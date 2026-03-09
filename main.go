@@ -474,8 +474,6 @@ func Run(args []string) error {
 					return err
 				}
 				goto skip
-			} else {
-				app.editMode = editUpperMode
 			}
 		}
 		if hander, ok := jumpTable[ch]; ok {
