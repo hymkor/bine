@@ -78,29 +78,10 @@ func makeHexOne(pointer *large.Pointer, cursorAddress int64, m editModeType, out
 		off = _CELL2_COLOR_OFF
 	}
 	if pointer.Address() == cursorAddress {
-		if m == editUpperMode {
-			fmt.Fprintf(out, "%s%1X%s%s%1X%s",
-				_CURSOR_COLOR_ON,
-				(value>>4)&15,
-				_CURSOR_COLOR_OFF,
-				on,
-				value&15,
-				off)
-			return
-		} else if m == editLowerMode {
-			fmt.Fprintf(out, "%s%1X%s%s%1X%s",
-				on,
-				(value>>4)&15,
-				off,
-				_CURSOR_COLOR_ON,
-				value&15,
-				_CURSOR_COLOR_OFF)
-			return
-		}
-		on = _CURSOR_COLOR_ON
-		off = _CURSOR_COLOR_OFF
+		m.PrintByte(value, on, off, out)
+	} else {
+		fmt.Fprintf(out, "%s%02X%s", on, value, off)
 	}
-	fmt.Fprintf(out, "%s%02X%s", on, value, off)
 }
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
@@ -220,14 +201,6 @@ func (app *Application) View() (int, error) {
 	}
 }
 
-type editModeType int
-
-const (
-	viewMode editModeType = iota
-	editUpperMode
-	editLowerMode
-)
-
 type Application struct {
 	tty1         ttyadapter.Tty
 	in           io.Reader
@@ -273,6 +246,7 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 		out:       out,
 		buffer:    large.NewBuffer(in),
 		clipBoard: NewClip(),
+		editMode:  viewMode{},
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -318,11 +292,7 @@ func (app *Application) printDefaultStatusBar() {
 	} else {
 		io.WriteString(app.out, " ")
 	}
-	if app.editMode == viewMode {
-		io.WriteString(app.out, "View:")
-	} else {
-		io.WriteString(app.out, "Edit:")
-	}
+	io.WriteString(app.out, app.editMode.String())
 	fmt.Fprintf(app.out, "[%s]", app.encoding.ModeString())
 
 	fmt.Fprintf(app.out, "%4[1]d='\\x%02[1]X'", app.cursor.Value())
@@ -468,20 +438,10 @@ func Run(args []string) error {
 		}
 		app.message = ""
 
-		if app.editMode != viewMode {
-			if index := strings.Index("0123456789abcdef", ch); index >= 0 {
-				if err := keyFuncReplaceInline(app, byte(index)); err != nil {
-					return err
-				}
-				goto skip
-			}
+		if err := app.editMode.Handle(ch, app); err != nil {
+			return err
 		}
-		if hander, ok := jumpTable[ch]; ok {
-			if err := hander(app); err != nil {
-				return err
-			}
-		}
-	skip:
+
 		if app.buffer.Len() <= 0 {
 			return nil
 		}
