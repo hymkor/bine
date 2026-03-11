@@ -123,8 +123,12 @@ Key-binding
     * In direct edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
 * `i`  
     * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
-* `a`(view mode only), `A`
+* `I`
+    * Insert 0x00
+* `a` (view mode only)
     * Append data (e.g., `0xFF`, `U+0000`, `"string"`)
+* `A`
+    * Append 0x00
 * `x`, `DEL`  
     * Delete and yank the byte under the cursor
 * `p`  

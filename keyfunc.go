@@ -372,6 +372,12 @@ func keyFuncInsertExp(app *Application) error {
 	return nil
 }
 
+func keyFuncInsertZero(app *Application) error {
+	app.InsertZero()
+	app.editMode = app.editMode.Reset()
+	return nil
+}
+
 func keyFuncAppendExp(app *Application) error {
 	exp, err := readExpression(app, "append>")
 	if err != nil {
@@ -382,6 +388,13 @@ func keyFuncAppendExp(app *Application) error {
 	if err != nil {
 		app.message = err.Error()
 	}
+	return nil
+}
+
+func keyFuncAppendZero(app *Application) error {
+	app.AppendZero()
+	app.cursor.Next()
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
@@ -437,8 +450,9 @@ func keyFuncChangeMode(app *Application) error {
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
+	"I":         keyFuncInsertZero,
 	"a":         keyFuncAppendExp,
-	"A":         keyFuncAppendExp,
+	"A":         keyFuncAppendZero,
 	_KEY_ALT_A:  keyFuncDbcsMode,
 	_KEY_ALT_U:  keyFuncUtf8Mode,
 	_KEY_ALT_L:  keyFuncUtf16LeMode,
