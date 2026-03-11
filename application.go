@@ -80,6 +80,20 @@ func (app *Application) InsertExp(exp string) error {
 	return err
 }
 
+func (app *Application) InsertZero() {
+	undoAddress := app.cursor.Address()
+	orgDirty := app.dirty
+	space := app.cursor.InsertSpace(1)
+	space[0] = 0
+	undo := func(app *Application) {
+		p := large.NewPointerAt(undoAddress, app.buffer)
+		p.RemoveSpace(1)
+		app.dirty = orgDirty
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
+}
+
 func appendExp(exp string, enc encoding.Encoding, ptr *large.Pointer) (int, error) {
 	bytes, err := evalExpression(exp, enc)
 	if err != nil {
@@ -104,4 +118,18 @@ func (app *Application) AppendExp(exp string) error {
 		app.dirty = true
 	}
 	return err
+}
+
+func (app *Application) AppendZero() {
+	space := app.cursor.AppendSpace(1)
+	space[0] = 0
+	undoAddress := app.cursor.Address() + 1
+	orgDirty := app.dirty
+	undo := func(app *Application) {
+		p := large.NewPointerAt(undoAddress, app.buffer)
+		p.RemoveSpace(1)
+		app.dirty = orgDirty
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
 }
