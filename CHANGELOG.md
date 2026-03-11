@@ -14,6 +14,7 @@ Changelog
 - Indicate READONLY files explicitly when prompting for overwrite confirmation (#37)
 - Changed file saving to use a temporary file until writing completes, eliminating any window where the original file could be left in a partial state. (#35)
 - Add `Shift`+`I` (insert 0x00 to the left of the cursor) and `Shift`+`A` (insert 0x00 to the right of the cursor). (#50)
+- After UNDO, move the cursor to the address of the reverted change. (#51)
 
 ### Documents
 
