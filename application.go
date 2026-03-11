@@ -69,10 +69,12 @@ func (app *Application) InsertExp(exp string) error {
 	orgDirty := app.dirty
 	size, err := insertExp(exp, app.encoding, app.cursor)
 	if err == nil {
-		undo := func(app *Application) {
+		undo := func(app *Application) (rv int64) {
 			p := large.NewPointerAt(undoAddress, app.buffer)
+			rv = p.Address()
 			p.RemoveSpace(size)
 			app.dirty = orgDirty
+			return
 		}
 		app.undoFuncs = append(app.undoFuncs, undo)
 		app.dirty = true
@@ -85,10 +87,12 @@ func (app *Application) InsertZero() {
 	orgDirty := app.dirty
 	space := app.cursor.InsertSpace(1)
 	space[0] = 0
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(undoAddress, app.buffer)
+		rv = p.Address()
 		p.RemoveSpace(1)
 		app.dirty = orgDirty
+		return
 	}
 	app.undoFuncs = append(app.undoFuncs, undo)
 	app.dirty = true
@@ -109,10 +113,12 @@ func (app *Application) AppendExp(exp string) error {
 	undoAddress := app.cursor.Address() + 1
 	orgDirty := app.dirty
 	if err == nil {
-		undo := func(app *Application) {
+		undo := func(app *Application) (rv int64) {
 			p := large.NewPointerAt(undoAddress, app.buffer)
+			rv = p.Address()
 			p.RemoveSpace(size)
 			app.dirty = orgDirty
+			return
 		}
 		app.undoFuncs = append(app.undoFuncs, undo)
 		app.dirty = true
@@ -125,10 +131,12 @@ func (app *Application) AppendZero() {
 	space[0] = 0
 	undoAddress := app.cursor.Address() + 1
 	orgDirty := app.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(undoAddress, app.buffer)
+		rv = p.Address()
 		p.RemoveSpace(1)
 		app.dirty = orgDirty
+		return
 	}
 	app.undoFuncs = append(app.undoFuncs, undo)
 	app.dirty = true

@@ -216,7 +216,7 @@ type Application struct {
 	message      string
 	cache        map[int]string
 	encoding     encoding.Encoding
-	undoFuncs    []func(app *Application)
+	undoFuncs    []func(app *Application) int64
 	editMode     editModeType
 }
 

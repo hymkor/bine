@@ -137,10 +137,12 @@ func keyFuncPasteAfter(this *Application) error {
 	newByte := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address() + 1
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
+		rv = p.Address()
 		p.Remove()
 		this.dirty = orgDirty
+		return
 	}
 	this.cursor.Append(newByte)
 	this.undoFuncs = append(this.undoFuncs, undo)
@@ -156,10 +158,12 @@ func keyFuncPasteBefore(this *Application) error {
 	newByte := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address()
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
+		rv = p.Address()
 		p.Remove()
 		this.dirty = orgDirty
+		return
 	}
 	this.cursor.Insert(newByte)
 	this.undoFuncs = append(this.undoFuncs, undo)
@@ -172,10 +176,11 @@ func keyFuncRemoveByte(this *Application) error {
 	orgValue := this.cursor.Value()
 	address := this.cursor.Address()
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) int64 {
 		p := large.NewPointerAt(address, app.buffer)
 		p.Insert(orgValue)
 		app.dirty = orgDirty
+		return p.Address()
 	}
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
@@ -281,10 +286,11 @@ func keyFuncReplaceByte(this *Application) error {
 		address := this.cursor.Address()
 		orgValue := this.cursor.Value()
 		orgDirty := this.dirty
-		undo := func(app *Application) {
+		undo := func(app *Application) int64 {
 			p := large.NewPointerAt(address, app.buffer)
 			p.SetValue(orgValue)
 			app.dirty = orgDirty
+			return p.Address()
 		}
 		this.undoFuncs = append(this.undoFuncs, undo)
 		this.cursor.SetValue(byte(n))
@@ -406,11 +412,15 @@ func keyFuncUndo(app *Application) error {
 
 	undoFunc1 := app.undoFuncs[len(app.undoFuncs)-1]
 	app.undoFuncs = app.undoFuncs[:len(app.undoFuncs)-1]
-	undoFunc1(app)
+	undoneAddress := undoFunc1(app)
 
 	app.cursor = large.NewPointer(app.buffer)
 	app.window = app.cursor.Clone()
-	app.cursor.Skip(addressSave)
+	if undoneAddress >= 0 {
+		app.cursor.Skip(undoneAddress)
+	} else {
+		app.cursor.Skip(addressSave)
+	}
 	return nil
 }
 
@@ -428,10 +438,11 @@ func keyFuncReplaceInline(app *Application, n byte) error {
 	if app.editMode, ok = app.editMode.Next(); ok {
 		app.cursor.Next()
 	}
-	undo := func(ap *Application) {
+	undo := func(ap *Application) int64 {
 		p := large.NewPointerAt(address, ap.buffer)
 		p.SetValue(orgValue)
 		ap.dirty = orgDirty
+		return p.Address()
 	}
 	app.undoFuncs = append(app.undoFuncs, undo)
 	app.dirty = true
