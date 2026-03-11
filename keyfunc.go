@@ -51,13 +51,10 @@ func keyFuncNext(this *Application) error {
 
 // keyFuncBackword move the cursor to the previous byte.
 func keyFuncBackword(app *Application) error {
-	if app.editMode == editLowerMode {
-		app.editMode = editUpperMode
-		return nil
-	} else if app.editMode == editUpperMode {
-		app.editMode = editLowerMode
+	var ok bool
+	if app.editMode, ok = app.editMode.Prev(); ok {
+		app.cursor.Prev()
 	}
-	app.cursor.Prev()
 	return nil
 }
 
@@ -91,12 +88,8 @@ func keyFuncQuit(this *Application) error {
 
 // keyFuncForward moves the cursor to the next one byte.
 func keyFuncForward(app *Application) error {
-	if app.editMode == editUpperMode {
-		app.editMode = editLowerMode
-	} else if app.editMode == editLowerMode {
-		app.cursor.Next()
-		app.editMode = editUpperMode
-	} else {
+	var ok bool
+	if app.editMode, ok = app.editMode.Next(); ok {
 		app.cursor.Next()
 	}
 	return nil
@@ -108,9 +101,7 @@ func keyFuncGoBeginOfLine(app *Application) error {
 	if n > 0 {
 		app.cursor.Rewind(n)
 	}
-	if app.editMode == editLowerMode {
-		app.editMode = editUpperMode
-	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
@@ -120,27 +111,21 @@ func keyFuncGoEndOfLine(app *Application) error {
 	if n > 0 {
 		app.cursor.Skip(n)
 	}
-	if app.editMode == editLowerMode {
-		app.editMode = editUpperMode
-	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
 func keyFuncGoBeginOfFile(app *Application) error {
 	app.cursor = large.NewPointer(app.buffer)
 	app.window = large.NewPointer(app.buffer)
-	if app.editMode == editLowerMode {
-		app.editMode = editUpperMode
-	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
 // keyFuncGoEndOfFile moves the cursor to the end of the file.
 func keyFuncGoEndOfFile(app *Application) error {
 	app.cursor.GoEndOfFile()
-	if app.editMode == editLowerMode {
-		app.editMode = editUpperMode
-	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
@@ -421,12 +406,13 @@ func keyFuncReplaceInline(app *Application, n byte) error {
 	orgValue := app.cursor.Value()
 	orgDirty := app.dirty
 
-	if app.editMode == editUpperMode {
-		app.cursor.SetValue((orgValue &^ 0xF0) | (n << 4))
-		app.editMode = editLowerMode
-	} else {
+	if app.editMode.(directMode).Lower {
 		app.cursor.SetValue((orgValue &^ 0x0F) | (n & 0xF))
-		app.editMode = editUpperMode
+	} else {
+		app.cursor.SetValue((orgValue &^ 0xF0) | (n << 4))
+	}
+	var ok bool
+	if app.editMode, ok = app.editMode.Next(); ok {
 		app.cursor.Next()
 	}
 	undo := func(ap *Application) {
@@ -440,10 +426,10 @@ func keyFuncReplaceInline(app *Application, n byte) error {
 }
 
 func keyFuncChangeMode(app *Application) error {
-	if app.editMode == viewMode {
-		app.editMode = editUpperMode
+	if _, ok := app.editMode.(directMode); ok {
+		app.editMode = viewMode{}
 	} else {
-		app.editMode = viewMode
+		app.editMode = directMode{}
 	}
 	return nil
 }
