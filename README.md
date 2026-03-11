@@ -109,7 +109,7 @@ Key-binding
     * Move the cursor right
 * `0` (zero), `^`, `Ctrl-A`  
     * Move the cursor to the beginning of the current line
-    * `0` is available in View mode only
+    * `0` is available in command mode only
 * `$`, `Ctrl-E`  
     * Move the cursor to the end of the current line
 * `<`  
@@ -119,8 +119,8 @@ Key-binding
 * `r`
     * Replace the byte under the cursor
 * `R`
-    * Toggle between View mode and Edit mode. (see "Modes" below)
-    * In Edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
+    * Toggle between command mode and direct edit mode. (see "Modes" below)
+    * In direct edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
 * `i`  
     * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
 * `a`(view mode only), `A`
@@ -151,19 +151,19 @@ Key-binding
 Modes
 -----
 
-The editor has two modes: View mode and Edit mode.
+The editor has two modes: command mode and direct edit mode.
 
-* View mode (default)
+* Command mode (default)
     * The file can be navigated safely without modifying data.
     * Most keys are interpreted as commands.
-* Edit mode
+* Direct edit mode
     * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
     * The first digit replaces the high nibble and the second digit replaces the low nibble.
     * After two digits are entered, the cursor moves to the next byte.
 
 Most command keys work in both modes.  
 In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
-Press `R` to toggle between View mode and Edit mode.
+Press `R` to toggle between command mode and direct edit mode.
 
 Changelog
 ---------
