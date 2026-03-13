@@ -1,16 +1,16 @@
 {
-    "version": "0.7.1",
+    "version": "0.8.0",
     "description": "Bine - A terminal binary editor",
     "homepage": "https://github.com/hymkor/bine",
     "license": "MIT License",
     "architecture": {
         "32bit": {
-            "url": "https://github.com/hymkor/bine/releases/download/v0.7.1/bine-v0.7.1-windows-386.zip",
-            "hash": "0b9ddc1f6243dae4545cbe8a5cc405a8dd2fc18d34aee686b364eeac91002375"
+            "url": "https://github.com/hymkor/bine/releases/download/v0.8.0/bine-v0.8.0-windows-386.zip",
+            "hash": "79ffae3e37c379f36e874678fc72a0418e80e4239cc42a2df7cfcd4fd11c2f6c"
         },
         "64bit": {
-            "url": "https://github.com/hymkor/bine/releases/download/v0.7.1/bine-v0.7.1-windows-amd64.zip",
-            "hash": "3cb84b3e36e3be7faeffb29194dceba1ddc9ff1aedfc449ac5ce7151dc8ded8f"
+            "url": "https://github.com/hymkor/bine/releases/download/v0.8.0/bine-v0.8.0-windows-amd64.zip",
+            "hash": "7af30e52ccbd7459e0761a673457ac2954d6002c5a9e0cfb628c37065184d4f2"
         }
     },
     "bin": "bine.exe",
