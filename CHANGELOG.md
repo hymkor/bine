@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v0.8.0
+------
+Mar 13, 2026
+
 ### Bug fixes
 
 - Fixed an issue where the version string was empty when built without GNU Make.  
