@@ -109,18 +109,26 @@ Key-binding
     * Move the cursor right
 * `0` (zero), `^`, `Ctrl-A`  
     * Move the cursor to the beginning of the current line
+    * `0` is available in command mode only
 * `$`, `Ctrl-E`  
     * Move the cursor to the end of the current line
 * `<`  
     * Move the cursor to the beginning of the file
 * `>`, `G`  
     * Move the cursor to the end of the file
-* `r`  
+* `r`
     * Replace the byte under the cursor
+* `R`
+    * Toggle between command mode and direct edit mode. (see "Modes" below)
+    * In direct edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
 * `i`  
     * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
-* `a`  
+* `I`
+    * Insert 0x00
+* `a` (view mode only)
     * Append data (e.g., `0xFF`, `U+0000`, `"string"`)
+* `A`
+    * Append 0x00
 * `x`, `DEL`  
     * Delete and yank the byte under the cursor
 * `p`  
@@ -144,11 +152,36 @@ Key-binding
 
 `Meta` means either `Alt`+`key` or `Esc` followed by key.
 
+Modes
+-----
+
+The editor has two modes: command mode and direct edit mode.
+
+* Command mode (default)
+    * The file can be navigated safely without modifying data.
+    * Most keys are interpreted as commands.
+* Direct edit mode
+    * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
+    * The first digit replaces the high nibble and the second digit replaces the low nibble.
+    * After two digits are entered, the cursor moves to the next byte.
+
+Most command keys work in both modes.  
+In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
+Press `R` to toggle between command mode and direct edit mode.
+
 Changelog
--------------
+---------
 
 - [English](/CHANGELOG.md)
 - [Japanese](/CHANGELOG_ja.md)
+
+Contributing
+------------
+
+- Bug reports and improvement suggestions are welcome. You may write them in either English or Japanese.
+- Please write comments in the code and commit messages in English.
+- If a `develop` branch exists at the time of your pull request, please target it. Otherwise, `master` is fine.
+- Test code and documentation updates that accompany code changes are appreciated, but not required. They can be added later if necessary.
 
 Acknowledgements
 ----------------

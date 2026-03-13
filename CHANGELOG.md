@@ -1,9 +1,31 @@
 Changelog
-=============
+=========
+
+v0.8.0
+------
+Mar 13, 2026
+
+### Bug fixes
 
 - Fixed an issue where the version string was empty when built without GNU Make.  
   The version string is now updated via `make bump` during the release process. (#33)
+- Fixed an issue where the progress animation was cleared at the wrong position during long save operations. ([go-inline-animation#6], [go-inline-animation#7], #36)
+- Preserve original file permissions when overwriting files (#37,#42)
+
+### New Features
+
+- Add direct edit mode that allows directly overwriting hexadecimal values under the cursor. Toggle with `Shift`+`R` (switches from the traditional command mode). (#43)
+- Indicate READONLY files explicitly when prompting for overwrite confirmation (#37)
+- Changed file saving to use a temporary file until writing completes, eliminating any window where the original file could be left in a partial state. (#35)
+- Add `Shift`+`I` (insert 0x00 to the left of the cursor) and `Shift`+`A` (insert 0x00 to the right of the cursor). (#50)
+- After UNDO, move the cursor to the address of the reverted change. (#51)
+
+### Documents
+
 - Rename release note files to CHANGELOG.md and CHANGELOG\_ja.md. (#34)
+
+[go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
+[go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
 
 v0.7.1
 ------

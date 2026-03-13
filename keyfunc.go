@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/nyaosorg/go-inline-animation"
@@ -13,6 +14,8 @@ import (
 
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
+	"github.com/hymkor/go-safewrite"
+	"github.com/hymkor/go-safewrite/perm"
 )
 
 const (
@@ -47,8 +50,11 @@ func keyFuncNext(this *Application) error {
 }
 
 // keyFuncBackword move the cursor to the previous byte.
-func keyFuncBackword(this *Application) error {
-	this.cursor.Prev()
+func keyFuncBackword(app *Application) error {
+	var ok bool
+	if app.editMode, ok = app.editMode.Prev(); ok {
+		app.cursor.Prev()
+	}
 	return nil
 }
 
@@ -65,7 +71,7 @@ func keyFuncQuit(this *Application) error {
 			return err
 		}
 		if ch == "y" || ch == "Y" {
-			newfname, err := writeFile(this.buffer, this.tty1, this.out, this.savePath)
+			newfname, err := writeFile(this)
 			if err != nil {
 				this.message = err.Error()
 				return nil
@@ -81,38 +87,45 @@ func keyFuncQuit(this *Application) error {
 }
 
 // keyFuncForward moves the cursor to the next one byte.
-func keyFuncForward(this *Application) error {
-	this.cursor.Next()
+func keyFuncForward(app *Application) error {
+	var ok bool
+	if app.editMode, ok = app.editMode.Next(); ok {
+		app.cursor.Next()
+	}
 	return nil
 }
 
 // keyFuncGoBeginOfLine move the cursor the the top of the 16bytes-block.
-func keyFuncGoBeginOfLine(this *Application) error {
-	n := this.cursor.Address() % LINE_SIZE
+func keyFuncGoBeginOfLine(app *Application) error {
+	n := app.cursor.Address() % LINE_SIZE
 	if n > 0 {
-		this.cursor.Rewind(n)
+		app.cursor.Rewind(n)
 	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
 // keyFuncGoEndOfLine move the cursor to the end of the current 16 byte block.
-func keyFuncGoEndOfLine(this *Application) error {
-	n := LINE_SIZE - this.cursor.Address()%LINE_SIZE - 1
+func keyFuncGoEndOfLine(app *Application) error {
+	n := LINE_SIZE - app.cursor.Address()%LINE_SIZE - 1
 	if n > 0 {
-		this.cursor.Skip(n)
+		app.cursor.Skip(n)
 	}
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
-func keyFuncGoBeginOfFile(this *Application) error {
-	this.cursor = large.NewPointer(this.buffer)
-	this.window = large.NewPointer(this.buffer)
+func keyFuncGoBeginOfFile(app *Application) error {
+	app.cursor = large.NewPointer(app.buffer)
+	app.window = large.NewPointer(app.buffer)
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
 // keyFuncGoEndOfFile moves the cursor to the end of the file.
-func keyFuncGoEndOfFile(this *Application) error {
-	this.cursor.GoEndOfFile()
+func keyFuncGoEndOfFile(app *Application) error {
+	app.cursor.GoEndOfFile()
+	app.editMode = app.editMode.Reset()
 	return nil
 }
 
@@ -124,10 +137,12 @@ func keyFuncPasteAfter(this *Application) error {
 	newByte := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address() + 1
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
+		rv = p.Address()
 		p.Remove()
 		this.dirty = orgDirty
+		return
 	}
 	this.cursor.Append(newByte)
 	this.undoFuncs = append(this.undoFuncs, undo)
@@ -143,10 +158,12 @@ func keyFuncPasteBefore(this *Application) error {
 	newByte := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address()
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
+		rv = p.Address()
 		p.Remove()
 		this.dirty = orgDirty
+		return
 	}
 	this.cursor.Insert(newByte)
 	this.undoFuncs = append(this.undoFuncs, undo)
@@ -159,10 +176,11 @@ func keyFuncRemoveByte(this *Application) error {
 	orgValue := this.cursor.Value()
 	address := this.cursor.Address()
 	orgDirty := this.dirty
-	undo := func(app *Application) {
+	undo := func(app *Application) int64 {
 		p := large.NewPointerAt(address, app.buffer)
 		p.Insert(orgValue)
 		app.dirty = orgDirty
+		return p.Address()
 	}
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
@@ -178,35 +196,37 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 }
 
-var overWritten = map[string]struct{}{}
-
 func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
 	return getline(out, prompt, defaultString, history)
 }
 
 var fnameHistory = simplehistory.New()
 
-func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (string, error) {
+func writeFile(app *Application) (string, error) {
+	buffer := app.buffer
+	tty1 := app.tty1
+	out := app.out
+	fname := app.savePath
+
 	var err error
 	fname, err = getlineOr(out, "write to>", fname, fnameHistory)
 	if err != nil {
 		return "", err
 	}
-	fd, err := os.OpenFile(fname, os.O_WRONLY|os.O_EXCL|os.O_CREATE, 0666)
-	if os.IsExist(err) {
-		if _, ok := overWritten[fname]; ok {
-			os.Remove(fname)
-		} else {
-			if !yesNo(tty1, out, "Overwrite as \""+fname+"\" [y/n] ?") {
-				return "", err
-			}
-			backupName := fname + "~"
-			os.Remove(backupName)
-			os.Rename(fname, backupName)
-			overWritten[fname] = struct{}{}
+	prompt := func(info *safewrite.Info) bool {
+		if info.Status != safewrite.NONE {
+			return true
 		}
-		fd, err = os.OpenFile(fname, os.O_WRONLY|os.O_EXCL|os.O_CREATE, 0666)
+		if info.ReadOnly() {
+			if yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?") {
+				return true
+			}
+			return false
+		}
+		return yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
+
+	fd, err := safewrite.Open(fname, prompt)
 	if err != nil {
 		return "", err
 	}
@@ -219,14 +239,30 @@ func writeFile(buffer *large.Buffer, tty1 Tty, out io.Writer, fname string) (str
 		return "", err1
 	}
 	if err2 != nil {
+		var e *safewrite.BackupError
+		if errors.As(err2, &e) {
+			return "",
+				fmt.Errorf("Failed to backup %q to %q (tmp: %q)",
+					filepath.Base(e.Target),
+					filepath.Base(e.Backup),
+					filepath.Base(e.Tmp))
+		}
+		var re *safewrite.ReplaceError
+		if errors.As(err2, &re) {
+			return "",
+				fmt.Errorf("Failed to replace %q to %q",
+					filepath.Base(re.Tmp),
+					filepath.Base(re.Target))
+		}
 		return "", err2
 	}
 	fnameHistory.Add(fname)
+	perm.Track(fd)
 	return fname, nil
 }
 
 func keyFuncWriteFile(this *Application) error {
-	newfname, err := writeFile(this.buffer, this.tty1, this.out, this.savePath)
+	newfname, err := writeFile(this)
 	if err != nil {
 		this.message = err.Error()
 	} else {
@@ -250,10 +286,11 @@ func keyFuncReplaceByte(this *Application) error {
 		address := this.cursor.Address()
 		orgValue := this.cursor.Value()
 		orgDirty := this.dirty
-		undo := func(app *Application) {
+		undo := func(app *Application) int64 {
 			p := large.NewPointerAt(address, app.buffer)
 			p.SetValue(orgValue)
 			app.dirty = orgDirty
+			return p.Address()
 		}
 		this.undoFuncs = append(this.undoFuncs, undo)
 		this.cursor.SetValue(byte(n))
@@ -341,6 +378,12 @@ func keyFuncInsertExp(app *Application) error {
 	return nil
 }
 
+func keyFuncInsertZero(app *Application) error {
+	app.InsertZero()
+	app.editMode = app.editMode.Reset()
+	return nil
+}
+
 func keyFuncAppendExp(app *Application) error {
 	exp, err := readExpression(app, "append>")
 	if err != nil {
@@ -354,6 +397,13 @@ func keyFuncAppendExp(app *Application) error {
 	return nil
 }
 
+func keyFuncAppendZero(app *Application) error {
+	app.AppendZero()
+	app.cursor.Next()
+	app.editMode = app.editMode.Reset()
+	return nil
+}
+
 func keyFuncUndo(app *Application) error {
 	if len(app.undoFuncs) <= 0 {
 		return nil
@@ -362,18 +412,58 @@ func keyFuncUndo(app *Application) error {
 
 	undoFunc1 := app.undoFuncs[len(app.undoFuncs)-1]
 	app.undoFuncs = app.undoFuncs[:len(app.undoFuncs)-1]
-	undoFunc1(app)
+	undoneAddress := undoFunc1(app)
 
 	app.cursor = large.NewPointer(app.buffer)
 	app.window = app.cursor.Clone()
-	app.cursor.Skip(addressSave)
+	if undoneAddress >= 0 {
+		app.cursor.Skip(undoneAddress)
+	} else {
+		app.cursor.Skip(addressSave)
+	}
+	return nil
+}
+
+func keyFuncReplaceInline(app *Application, n byte) error {
+	address := app.cursor.Address()
+	orgValue := app.cursor.Value()
+	orgDirty := app.dirty
+
+	if app.editMode.(directMode).Lower {
+		app.cursor.SetValue((orgValue &^ 0x0F) | (n & 0xF))
+	} else {
+		app.cursor.SetValue((orgValue &^ 0xF0) | (n << 4))
+	}
+	var ok bool
+	if app.editMode, ok = app.editMode.Next(); ok {
+		app.cursor.Next()
+	}
+	undo := func(ap *Application) int64 {
+		p := large.NewPointerAt(address, ap.buffer)
+		p.SetValue(orgValue)
+		ap.dirty = orgDirty
+		return p.Address()
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
+	return nil
+}
+
+func keyFuncChangeMode(app *Application) error {
+	if _, ok := app.editMode.(directMode); ok {
+		app.editMode = viewMode{}
+	} else {
+		app.editMode = directMode{}
+	}
 	return nil
 }
 
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
+	"I":         keyFuncInsertZero,
 	"a":         keyFuncAppendExp,
+	"A":         keyFuncAppendZero,
 	_KEY_ALT_A:  keyFuncDbcsMode,
 	_KEY_ALT_U:  keyFuncUtf8Mode,
 	_KEY_ALT_L:  keyFuncUtf16LeMode,
@@ -409,4 +499,5 @@ var jumpTable = map[string]func(this *Application) error{
 	"w":         keyFuncWriteFile,
 	"r":         keyFuncReplaceByte,
 	_KEY_CTRL_L: keyFuncRepaint,
+	"R":         keyFuncChangeMode,
 }

@@ -1,9 +1,31 @@
 Changelog
-=============
+=========
+
+v0.8.0
+------
+Mar 13, 2026
+
+### 不具合修正
 
 - GNU Make なしでビルドした場合に、バージョン文字列が空になってしまう問題を修正  
   今後、バージョンアップ時に `make bump` を実行する (#33)
+- 保存に時間がかかった時、テキストアニメの消去位置が狂う問題を修正 ([go-inline-animation#6], [go-inline-animation#7], #36)
+- 上書き保存時に元ファイルのパーミッションが維持されない問題を修正 (#37,#42)
+
+### 仕様変更
+
+- カーソル上の16進数を直接書き換える Direct edit mode を追加。従来のモード（Command mode）と `Shift`+`R` で切り替えるようにした (#43)
+- 上書き確認時に、READONLY 属性のファイルであることを明示するようにした (#37)
+- ファイル保存時に出力が完了するまで一時ファイル名を使い、元のファイルが不完全な状態になる時間をゼロとした (#35)
+- `Shift`+`I` でカーソル左に0x00 を、`Shift`+`A` でカーソル右へ 0x00 を挿入するようにした (#50)
+- UNDO を行った際、変更が戻されたアドレス位置にカーソルを移動させるようにした。(#51)
+
+### ドキュメント
+
 - リリースノートのファイル名を CHANGELOG.md と CHANGELOG\_JA.md へリネーム (#34)
+
+[go-inline-animation#6]: https://github.com/nyaosorg/go-inline-animation/pull/6
+[go-inline-animation#7]: https://github.com/nyaosorg/go-inline-animation/pull/7
 
 v0.7.1
 ------
