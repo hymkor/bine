@@ -90,13 +90,13 @@ func makeHexPart(pointer *large.Pointer, cursorAddress int64, mode editModeType,
 	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
 	for i := 0; i < LINE_SIZE; i++ {
 		makeHexOne(pointer, cursorAddress, mode, out)
+		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
 			for ; i < LINE_SIZE-1; i++ {
 				out.WriteString("   ")
 			}
 			return false
 		}
-		out.WriteByte(' ')
 	}
 	return true
 }
