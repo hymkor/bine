@@ -134,17 +134,18 @@ func keyFuncPasteAfter(this *Application) error {
 	if this.clipBoard.Len() <= 0 {
 		return nil
 	}
-	newByte := this.clipBoard.Pop()
+	newBytes := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address() + 1
 	orgDirty := this.dirty
 	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
 		rv = p.Address()
-		p.Remove()
+		p.RemoveSpace(len(newBytes))
 		this.dirty = orgDirty
 		return
 	}
-	this.cursor.Append(newByte)
+	space := this.cursor.AppendSpace(len(newBytes))
+	copy(space, newBytes)
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	return nil
@@ -155,17 +156,18 @@ func keyFuncPasteBefore(this *Application) error {
 	if this.clipBoard.Len() <= 0 {
 		return nil
 	}
-	newByte := this.clipBoard.Pop()
+	newBytes := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address()
 	orgDirty := this.dirty
 	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
 		rv = p.Address()
-		p.Remove()
+		p.RemoveSpace(len(newBytes))
 		this.dirty = orgDirty
 		return
 	}
-	this.cursor.Insert(newByte)
+	space := this.cursor.InsertSpace(len(newBytes))
+	copy(space, newBytes)
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	return nil
@@ -184,7 +186,7 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
-	this.clipBoard.Push(this.cursor.Value())
+	this.clipBoard.Push([]byte{this.cursor.Value()})
 	switch this.cursor.Remove() {
 	case large.RemoveAll:
 		return io.EOF

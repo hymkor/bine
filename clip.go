@@ -1,19 +1,19 @@
 package bine
 
 type Clip struct {
-	data []byte
+	data [][]byte
 }
 
 func NewClip() *Clip {
-	return &Clip{data: make([]byte, 0, 100)}
+	return &Clip{data: make([][]byte, 0, 100)}
 }
 
-func (c *Clip) Push(n byte) {
+func (c *Clip) Push(n []byte) {
 	c.data = append(c.data, n)
 }
 
-func (c *Clip) Pop() byte {
-	var newByte byte
+func (c *Clip) Pop() []byte {
+	var newByte []byte
 	if len(c.data) > 0 {
 		tail := len(c.data) - 1
 		newByte = c.data[tail]
