@@ -458,6 +458,15 @@ func keyFuncChangeMode(app *Application) error {
 	return nil
 }
 
+func keyFuncMarking(app *Application) error {
+	if app.mark > 0 {
+		app.mark = -1
+	} else {
+		app.mark = app.cursor.Address()
+	}
+	return nil
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
@@ -500,4 +509,5 @@ var jumpTable = map[string]func(this *Application) error{
 	"r":         keyFuncReplaceByte,
 	_KEY_CTRL_L: keyFuncRepaint,
 	"R":         keyFuncChangeMode,
+	"v":         keyFuncMarking,
 }
