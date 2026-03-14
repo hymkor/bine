@@ -1,6 +1,8 @@
 Changelog
 =========
 
+- Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
+
 v0.8.0
 ------
 Mar 13, 2026
