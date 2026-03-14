@@ -52,4 +52,10 @@ readme:
 	$(GO) run github.com/hymkor/example-into-readme@latest
 	$(GO) run github.com/hymkor/example-into-readme@latest -target README_ja.md
 
-.PHONY: all test _dist dist clean manifest
+docs:
+	$(GO) run github.com/hymkor/minipage@latest -title "Bine - A terminal binary editor" -outline-in-sidebar -readme-to-index README.md > docs/index.html
+	$(GO) run github.com/hymkor/minipage@latest -title "Bine - A terminal binary editor" -outline-in-sidebar -readme-to-index README_ja.md > docs/index_ja.html
+	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG.md > docs/CHANGELOG.html
+	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG_ja.md > docs/CHANGELOG_ja.html
+
+.PHONY: all test _dist dist clean manifest docs
