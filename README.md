@@ -1,5 +1,6 @@
 Bine - A terminal binary editor
 ================================
+( English / [Japanese](README_ja.md) )
 
 <!-- stdout: go run github.com/hymkor/example-into-readme/cmd/badges@master -->
 [![Go Test](https://github.com/hymkor/bine/actions/workflows/go.yml/badge.svg)](https://github.com/hymkor/bine/actions/workflows/go.yml)
@@ -97,83 +98,75 @@ $ cat FILE | bine
 Key-binding
 -----------
 
-* `q`  
-    * Quit
+### Cursor Movement
+
 * `h`, `BACKSPACE`, `ARROW-LEFT`, `Ctrl-B`  
-    * Move the cursor left
+  Move the cursor left
 * `j`, `ARROW-DOWN`, `Ctrl-N`  
-    * Move the cursor down
+  Move the cursor down
 * `k`, `ARROW-UP`, `Ctrl-P`  
-    * Move the cursor up
+  Move the cursor up
 * `l`, `SPACE`, `ARROW-RIGHT`, `Ctrl-F`  
-    * Move the cursor right
+  Move the cursor right
 * `0` (zero), `^`, `Ctrl-A`  
-    * Move the cursor to the beginning of the current line
-    * `0` is available in command mode only
+  Move the cursor to the beginning of the current line (`0` is available in command mode only; see below)
 * `$`, `Ctrl-E`  
-    * Move the cursor to the end of the current line
+  Move the cursor to the end of the current line
 * `<`  
-    * Move the cursor to the beginning of the file
+  Move the cursor to the beginning of the file
 * `>`, `G`  
-    * Move the cursor to the end of the file
-* `r`
-    * Replace the byte under the cursor
-* `R`
-    * Toggle between command mode and direct edit mode. (see "Modes" below)
-    * In direct edit mode, hexadecimal digits (`0-9`, `a-f`) overwrite the byte under the cursor
-* `i`  
-    * Insert data (e.g., `0xFF`, `U+0000`, `"string"`)
-* `I`
-    * Insert 0x00
-* `a` (view mode only)
-    * Append data (e.g., `0xFF`, `U+0000`, `"string"`)
-* `A`
-    * Append 0x00
-* `x`, `DEL`  
-    * Delete and yank the byte under the cursor
-* `p`  
-    * Paste one byte to the right side of the cursor
-* `P`  
-    * Paste one byte to the left side of the cursor
-* `u`  
-    * Undo
-* `w`  
-    * Write changes to file
+  Move the cursor to the end of the file (as far as data has been loaded at that point)
 * `&`  
-    * Jump to a specific address
+  Jump to a specified address
+
+### Editing
+
+* `r`  
+  Edit the byte under the cursor (the current value is shown at the bottom of the screen; enter a new value via readline)
+* `i`  
+  Insert data to the left of the cursor (e.g., `0xFF`, `U+0000`, `"string"`)
+* `a` (command mode only)  
+  Insert data to the right of the cursor (e.g., `0xFF`, `U+0000`, `"string"`)
+* `I`  
+  Insert `0x00` to the left of the cursor
+* `A`  
+  Insert `0x00` to the right of the cursor
+* `x`, `DEL`  
+  Delete the byte under the cursor and save it to the internal buffer
+* `p`  
+  Insert the byte from the internal buffer to the right of the cursor
+* `P`  
+  Insert the byte from the internal buffer to the left of the cursor
+* `R`  
+  Toggle direct edit mode. In this mode, pressing `0`–`9` or `a`–`f` directly overwrites the high nibble and then the low nibble of the byte under the cursor. Press `R` again to return to command mode.
+
+### Display
+
 * `Meta-U`  
-    * Change the character encoding to UTF-8 (default)
+  Change the character encoding to UTF-8 (default)
 * `Meta-A`  
-    * Change the character encoding to ANSI (the current Windows code page)
+  Change the character encoding to ANSI (the current Windows code page)
 * `Meta-L`  
-    * Change the character encoding to UTF-16LE
+  Change the character encoding to UTF-16LE
 * `Meta-B`  
-    * Change the character encoding to UTF-16BE
+  Change the character encoding to UTF-16BE
 
-`Meta` means either `Alt`+`key` or `Esc` followed by key.
+`Meta-` means either pressing `Alt` together with the key, or pressing `Esc` followed by the key.
 
-Modes
------
+### Miscellaneous
 
-The editor has two modes: command mode and direct edit mode.
-
-* Command mode (default)
-    * The file can be navigated safely without modifying data.
-    * Most keys are interpreted as commands.
-* Direct edit mode
-    * Hexadecimal digits (`0-9`, `a-f`) directly modify the byte under the cursor.
-    * The first digit replaces the high nibble and the second digit replaces the low nibble.
-    * After two digits are entered, the cursor moves to the next byte.
-
-Most command keys work in both modes.  
-In Edit mode, only hexadecimal digits (`0-9`, `a-f`) are interpreted as data input.
-Press `R` to toggle between command mode and direct edit mode.
+* `u`  
+  Undo the last change. Press repeatedly to undo further changes in sequence.
+* `w`  
+  Save changes to file
+* `q`  
+  Quit. If there are unsaved changes, you will be prompted to save before exiting.
 
 Changelog
 ---------
 
-- [English](/CHANGELOG.md)
-- [Japanese](/CHANGELOG_ja.md)
+- [English](CHANGELOG.md)
+- [Japanese](CHANGELOG_ja.md)
 
 Contributing
 ------------
