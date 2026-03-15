@@ -218,6 +218,20 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 }
 
+func keyFuncYank(app *Application) error {
+	if app.mark < 0 {
+		app.clipBoard.Push([]byte{app.cursor.Value()})
+		return nil
+	}
+	from, to := fromTo(app.mark, app.cursor.Address())
+	if to-from > 0x80000000 {
+		return errors.New("too long area")
+	}
+	app.mark = -1
+	app.clipBoard.Push(dupFromPointer(from, to, app.buffer))
+	return nil
+}
+
 func keyFuncDelete(app *Application) error {
 	var orgValue []byte
 	var from, to int64
@@ -578,4 +592,5 @@ var jumpTable = map[string]func(this *Application) error{
 	_KEY_CTRL_L: keyFuncRepaint,
 	"R":         keyFuncChangeMode,
 	"v":         keyFuncMarking,
+	"y":         keyFuncYank,
 }
