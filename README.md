@@ -9,31 +9,34 @@ Bine - A terminal binary editor
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/hymkor/bine)
 <!-- -->
 
+A fast terminal binary editor with asynchronous loading and pipeline support.
+
 ![ScreenShot](./screenshot.png)
 
 Key Features
 ------------
 
-* **Fast startup with asynchronous loading**
+* **Fast startup with asynchronous loading**  
   The viewer launches instantly and loads data in the background, allowing immediate interaction even with large files.
 
-* **Supports both files and standard input**
-  `bine` can read binary data not only from files but also from standard input, making it easy to use in pipelines.
+* **Split-view with hex and character representations**  
+  The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.
 
-* **Vi-style navigation**
+* **Vi-style navigation**  
   Navigation keys follow the familiar `vi` keybindings (`h`, `j`, `k`, `l`, etc.), allowing smooth movement for experienced users.  
 (Note: File name input uses Emacs-style key bindings.)
 
-* **Split-view with hex and character representations**
-  The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.
+* **Supports files and standard input/output**  
+  `bine` can read binary data from files or standard input.
+  Edited data can also be written to standard output, making it suitable for use in command pipelines.
 
-* **Smart decoding with character annotations**
+* **Smart decoding with character annotations**  
   Multi-byte characters are visually grouped based on byte structure. Special code points such as BOMs and control characters (e.g., newlines) are annotated with readable names or symbols, making it easier to understand mixed binary/text content and debug encoding issues.
 
-* **Minimal screen usage**
+* **Minimal screen usage**  
   `bine` only uses as many terminal lines as needed (1 line = 16 bytes), without occupying the full screen. This makes it easy to inspect or edit small binary data while still seeing the surrounding terminal output.
 
-* **Cross-platform**
+* **Cross-platform**  
   Written in Go, `bine` runs on both Windows and Linux. It should also build and work on other Unix-like systems.
 
 Install
@@ -82,6 +85,7 @@ go install github.com/hymkor/bine/cmd/bine@latest
 Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `bine`.
 <!-- -->
 
+
 Usage
 -----
 
@@ -92,8 +96,10 @@ $ bine [FILES...]
 or
 
 ```
-$ cat FILE | bine
+$ bine < in.bin > out.bin
 ```
+
+Edit the data and save using `-` as the file name to write the edited data to standard output.
 
 Key-binding
 -----------
