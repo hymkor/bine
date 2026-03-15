@@ -167,7 +167,7 @@ func TestAppendAndUndo(t *testing.T) {
 		keyFuncUndo)
 }
 
-func TestCutAreaAndPasteAfter(t *testing.T){
+func TestCutAreaAndPasteAfter(t *testing.T) {
 	try(t, "012345", "450123",
 		keyFuncGoBeginOfFile,
 		keyFuncMarking,
@@ -179,7 +179,7 @@ func TestCutAreaAndPasteAfter(t *testing.T){
 		keyFuncPasteAfter)
 }
 
-func TestCutAreaAndPasteBefore(t *testing.T){
+func TestCutAreaAndPasteBefore(t *testing.T) {
 	try(t, "012345", "401235",
 		keyFuncGoBeginOfFile,
 		keyFuncMarking,
@@ -191,7 +191,7 @@ func TestCutAreaAndPasteBefore(t *testing.T){
 		keyFuncPasteBefore)
 }
 
-func TestCopyAreaAndPasteAfter(t *testing.T){
+func TestCopyAreaAndPasteAfter(t *testing.T) {
 	try(t, "012345", "0123450123",
 		keyFuncGoBeginOfFile,
 		keyFuncMarking,
@@ -203,7 +203,7 @@ func TestCopyAreaAndPasteAfter(t *testing.T){
 		keyFuncPasteAfter)
 }
 
-func TestCopyAreaAndPasteBefore(t *testing.T){
+func TestCopyAreaAndPasteBefore(t *testing.T) {
 	try(t, "012345", "0123401235",
 		keyFuncGoBeginOfFile,
 		keyFuncMarking,
