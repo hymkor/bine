@@ -133,10 +133,16 @@ Key-binding
   Insert `0x00` to the right of the cursor
 * `x`, `DEL`  
   Delete the byte under the cursor and save it to the internal buffer
+* `v`  
+  Start or end selection mode
+* `y`  
+  Copy the selected region to the internal buffer. If nothing is selected, copies the byte under the cursor
+* `d`  
+  Delete the selected region and copy it to the internal buffer. If nothing is selected, behaves the same as `x`
 * `p`  
-  Insert the byte from the internal buffer to the right of the cursor
+  Insert data from the internal buffer to the right of the cursor
 * `P`  
-  Insert the byte from the internal buffer to the left of the cursor
+  Insert data from the internal buffer to the left of the cursor
 * `R`  
   Toggle direct edit mode. In this mode, pressing `0`–`9` or `a`–`f` directly overwrites the high nibble and then the low nibble of the byte under the cursor. Press `R` again to return to command mode.
 

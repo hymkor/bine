@@ -166,3 +166,51 @@ func TestAppendAndUndo(t *testing.T) {
 		_append(`"abcdef"`),
 		keyFuncUndo)
 }
+
+func TestCutAreaAndPasteAfter(t *testing.T){
+	try(t, "012345", "450123",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncDelete,
+		keyFuncGoEndOfFile,
+		keyFuncPasteAfter)
+}
+
+func TestCutAreaAndPasteBefore(t *testing.T){
+	try(t, "012345", "401235",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncDelete,
+		keyFuncGoEndOfFile,
+		keyFuncPasteBefore)
+}
+
+func TestCopyAreaAndPasteAfter(t *testing.T){
+	try(t, "012345", "0123450123",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncYank,
+		keyFuncGoEndOfFile,
+		keyFuncPasteAfter)
+}
+
+func TestCopyAreaAndPasteBefore(t *testing.T){
+	try(t, "012345", "0123401235",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncYank,
+		keyFuncGoEndOfFile,
+		keyFuncPasteBefore)
+}

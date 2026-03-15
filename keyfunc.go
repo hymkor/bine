@@ -134,17 +134,18 @@ func keyFuncPasteAfter(this *Application) error {
 	if this.clipBoard.Len() <= 0 {
 		return nil
 	}
-	newByte := this.clipBoard.Pop()
+	newBytes := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address() + 1
 	orgDirty := this.dirty
 	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
 		rv = p.Address()
-		p.Remove()
+		p.RemoveSpace(len(newBytes))
 		this.dirty = orgDirty
 		return
 	}
-	this.cursor.Append(newByte)
+	space := this.cursor.AppendSpace(len(newBytes))
+	copy(space, newBytes)
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	return nil
@@ -155,20 +156,41 @@ func keyFuncPasteBefore(this *Application) error {
 	if this.clipBoard.Len() <= 0 {
 		return nil
 	}
-	newByte := this.clipBoard.Pop()
+	newBytes := this.clipBoard.Pop()
 	orgAddress := this.cursor.Address()
 	orgDirty := this.dirty
 	undo := func(app *Application) (rv int64) {
 		p := large.NewPointerAt(orgAddress, app.buffer)
 		rv = p.Address()
-		p.Remove()
+		p.RemoveSpace(len(newBytes))
 		this.dirty = orgDirty
 		return
 	}
-	this.cursor.Insert(newByte)
+	space := this.cursor.InsertSpace(len(newBytes))
+	copy(space, newBytes)
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	return nil
+}
+
+func fromTo(a, b int64) (from, to int64) {
+	if a < b {
+		return a, b + 1
+	} else {
+		return b, a + 1
+	}
+}
+
+func dupFromPointer(start, until int64, buffer *large.Buffer) (b []byte) {
+	b = make([]byte, 0, until-start)
+	p := buffer.NewPointerAt(start)
+	for p.Address() < until {
+		b = append(b, p.Value())
+		if p.Next() != nil {
+			return
+		}
+	}
+	return
 }
 
 // keyFuncRemoveByte removes the byte where cursor exists.
@@ -184,7 +206,7 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
-	this.clipBoard.Push(this.cursor.Value())
+	this.clipBoard.Push([]byte{this.cursor.Value()})
 	switch this.cursor.Remove() {
 	case large.RemoveAll:
 		return io.EOF
@@ -194,6 +216,65 @@ func keyFuncRemoveByte(this *Application) error {
 	default:
 		return nil
 	}
+}
+
+func keyFuncYank(app *Application) error {
+	if app.mark < 0 {
+		app.clipBoard.Push([]byte{app.cursor.Value()})
+		return nil
+	}
+	from, to := fromTo(app.mark, app.cursor.Address())
+	if to-from > 0x80000000 {
+		return errors.New("too long area")
+	}
+	app.mark = -1
+	app.clipBoard.Push(dupFromPointer(from, to, app.buffer))
+	return nil
+}
+
+func keyFuncDelete(app *Application) error {
+	var orgValue []byte
+	var from, to int64
+
+	if app.mark < 0 {
+		from = app.cursor.Address()
+		to = from
+		orgValue = []byte{app.cursor.Value()}
+		app.cursor.Remove()
+	} else {
+		from, to = fromTo(app.mark, app.cursor.Address())
+		if to-from > 0x80000000 {
+			return errors.New("too long area")
+		}
+		app.mark = -1
+		orgValue = dupFromPointer(from, to, app.buffer)
+		if from <= 0 {
+			app.cursor = app.buffer.NewPointer()
+		} else {
+			app.cursor = app.buffer.NewPointerAt(from)
+		}
+		app.cursor.RemoveSpace(int(to - from))
+	}
+
+	orgDirty := app.dirty
+	undo := func(app *Application) int64 {
+		p := app.buffer.NewPointerAt(from)
+		space := p.InsertSpace(int(to - from))
+		copy(space, orgValue)
+		app.dirty = orgDirty
+		return p.Address()
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
+	app.clipBoard.Push(orgValue)
+
+	if app.buffer.Len() <= 0 {
+		return io.EOF
+	}
+	app.cursor = app.buffer.NewPointer()
+	app.window = app.cursor.Clone()
+	app.cursor.Skip(from)
+	return nil
 }
 
 func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
@@ -458,6 +539,15 @@ func keyFuncChangeMode(app *Application) error {
 	return nil
 }
 
+func keyFuncMarking(app *Application) error {
+	if app.mark > 0 {
+		app.mark = -1
+	} else {
+		app.mark = app.cursor.Address()
+	}
+	return nil
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
@@ -495,9 +585,12 @@ var jumpTable = map[string]func(this *Application) error{
 	"p":         keyFuncPasteAfter,
 	"P":         keyFuncPasteBefore,
 	"x":         keyFuncRemoveByte,
+	"d":         keyFuncDelete,
 	_KEY_DEL:    keyFuncRemoveByte,
 	"w":         keyFuncWriteFile,
 	"r":         keyFuncReplaceByte,
 	_KEY_CTRL_L: keyFuncRepaint,
 	"R":         keyFuncChangeMode,
+	"v":         keyFuncMarking,
+	"y":         keyFuncYank,
 }
