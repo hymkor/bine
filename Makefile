@@ -24,6 +24,7 @@ all:
 	$(SET) "CGO_ENABLED=0" && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
 
 test:
+	$(GO) fmt ./...
 	$(GO) test -v
 
 _dist:

@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
 
 	"github.com/nyaosorg/go-ttyadapter"
@@ -357,12 +358,16 @@ func (app *Application) shiftWindowToSeeCursorLine() {
 func Run(args []string) error {
 	defer perm.RestoreAll()
 
-	disable := colorable.EnableColorsStdout(nil)
-	if disable != nil {
-		defer disable()
+	var out io.Writer
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		disable := colorable.EnableColorsStdout(nil)
+		if disable != nil {
+			defer disable()
+		}
+		out = colorable.NewColorableStdout()
+	} else {
+		out = colorable.NewColorableStderr()
 	}
-	out := colorable.NewColorableStdout()
-
 	in, err := argf.New(args)
 	if err != nil {
 		return err
