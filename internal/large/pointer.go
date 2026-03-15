@@ -225,3 +225,11 @@ func (p *Pointer) RemoveSpace(space int) {
 	p.element.Value = chunk(block[:len(block)-space])
 	p.buffer.allsize -= int64(space)
 }
+
+func (b *Buffer) NewPointer() *Pointer {
+	return NewPointer(b)
+}
+
+func (b *Buffer) NewPointerAt(at int64) *Pointer {
+	return NewPointerAt(at, b)
+}
