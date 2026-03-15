@@ -173,6 +173,26 @@ func keyFuncPasteBefore(this *Application) error {
 	return nil
 }
 
+func fromTo(a, b int64) (from, to int64) {
+	if a < b {
+		return a, b + 1
+	} else {
+		return b, a + 1
+	}
+}
+
+func dupFromPointer(start, until int64, buffer *large.Buffer) (b []byte) {
+	b = make([]byte, 0, until-start)
+	p := buffer.NewPointerAt(start)
+	for p.Address() < until {
+		b = append(b, p.Value())
+		if p.Next() != nil {
+			return
+		}
+	}
+	return
+}
+
 // keyFuncRemoveByte removes the byte where cursor exists.
 func keyFuncRemoveByte(this *Application) error {
 	orgValue := this.cursor.Value()
