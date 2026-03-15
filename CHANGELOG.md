@@ -1,7 +1,16 @@
 Changelog
 =========
 
+### Bug fixes
+
 - Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
+
+### New features
+
+- Selection mode (`v`): press `v` to start or end a selection range (#56)
+- Yank (`y`): copy selected region to internal buffer; copies byte under cursor if no selection (#56)
+- Delete and yank (`d`): delete selected region and copy to internal buffer; behaves as `x` if no selection (#56)
+- `p` and `P` now insert multi-byte data from the internal buffer (#56)
 
 v0.8.0
 ------
