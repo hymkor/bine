@@ -218,6 +218,51 @@ func keyFuncRemoveByte(this *Application) error {
 	}
 }
 
+func keyFuncDelete(app *Application) error {
+	var orgValue []byte
+	var from, to int64
+
+	if app.mark < 0 {
+		from = app.cursor.Address()
+		to = from
+		orgValue = []byte{app.cursor.Value()}
+		app.cursor.Remove()
+	} else {
+		from, to = fromTo(app.mark, app.cursor.Address())
+		if to-from > 0x80000000 {
+			return errors.New("too long area")
+		}
+		app.mark = -1
+		orgValue = dupFromPointer(from, to, app.buffer)
+		if from <= 0 {
+			app.cursor = app.buffer.NewPointer()
+		} else {
+			app.cursor = app.buffer.NewPointerAt(from)
+		}
+		app.cursor.RemoveSpace(int(to - from))
+	}
+
+	orgDirty := app.dirty
+	undo := func(app *Application) int64 {
+		p := app.buffer.NewPointerAt(from)
+		space := p.InsertSpace(int(to - from))
+		copy(space, orgValue)
+		app.dirty = orgDirty
+		return p.Address()
+	}
+	app.undoFuncs = append(app.undoFuncs, undo)
+	app.dirty = true
+	app.clipBoard.Push(orgValue)
+
+	if app.buffer.Len() <= 0 {
+		return io.EOF
+	}
+	app.cursor = app.buffer.NewPointer()
+	app.window = app.cursor.Clone()
+	app.cursor.Skip(from)
+	return nil
+}
+
 func getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
 	return getline(out, prompt, defaultString, history)
 }
@@ -526,6 +571,7 @@ var jumpTable = map[string]func(this *Application) error{
 	"p":         keyFuncPasteAfter,
 	"P":         keyFuncPasteBefore,
 	"x":         keyFuncRemoveByte,
+	"d":         keyFuncDelete,
 	_KEY_DEL:    keyFuncRemoveByte,
 	"w":         keyFuncWriteFile,
 	"r":         keyFuncReplaceByte,
