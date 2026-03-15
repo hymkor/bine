@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/mattn/go-isatty"
+
 	"github.com/nyaosorg/go-inline-animation"
 	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
@@ -293,6 +295,13 @@ func writeFile(app *Application) (string, error) {
 	fname, err = getlineOr(out, "write to>", fname, fnameHistory)
 	if err != nil {
 		return "", err
+	}
+	if fname == "-" {
+		if isatty.IsTerminal(os.Stdout.Fd()) {
+			return "", errors.New("stdout is a terminal. Refusing to write binary data.")
+		}
+		_, err := buffer.WriteTo(os.Stdout)
+		return "-", err
 	}
 	prompt := func(info *safewrite.Info) bool {
 		if info.Status != safewrite.NONE {
