@@ -209,15 +209,10 @@ func keyFuncRemoveByte(this *Application) error {
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	this.clipBoard.Push([]byte{this.cursor.Value()})
-	switch this.cursor.Remove() {
-	case large.RemoveAll:
+	if this.cursor.Remove() == large.RemoveAll {
 		return io.EOF
-	case large.RemoveRefresh:
-		this.window = this.cursor
-		return nil
-	default:
-		return nil
 	}
+	return nil
 }
 
 func keyFuncYank(app *Application) error {
@@ -273,9 +268,7 @@ func keyFuncDelete(app *Application) error {
 	if app.buffer.Len() <= 0 {
 		return io.EOF
 	}
-	app.cursor = app.buffer.NewPointer()
-	app.window = app.cursor.Clone()
-	app.cursor.Skip(from)
+	app.cursor = app.buffer.NewPointerAt(from)
 	return nil
 }
 
@@ -505,7 +498,6 @@ func keyFuncUndo(app *Application) error {
 	undoneAddress := undoFunc1(app)
 
 	app.cursor = large.NewPointer(app.buffer)
-	app.window = app.cursor.Clone()
 	if undoneAddress >= 0 {
 		app.cursor.Skip(undoneAddress)
 	} else {
