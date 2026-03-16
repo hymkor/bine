@@ -477,7 +477,7 @@ func keyFuncAppendExp(app *Application) error {
 	if err != nil {
 		app.message = err.Error()
 	}
-	return nil
+	return keyFuncForward(app)
 }
 
 func keyFuncAppendZero(app *Application) error {
