@@ -2,6 +2,7 @@ package large
 
 import (
 	"container/list"
+	"errors"
 	"io"
 )
 
@@ -80,23 +81,42 @@ func (p *Pointer) Rewind(n int64) error {
 	}
 }
 
+// move cursor the end of the current block
+func (p *Pointer) moveCursorEndOfCurrentBlock() {
+	moveBytes := len(p.element.Value.(chunk)) - p.offset - 1
+	p.offset += moveBytes
+	p.address += int64(moveBytes)
+}
+
 func (p *Pointer) Skip(n int64) error {
+	foundEOF := false
 	for {
 		if int64(p.offset)+n < int64(len(p.element.Value.(chunk))) {
 			p.offset += int(n)
 			p.address += n
 			return nil
 		}
+		if foundEOF {
+			return io.EOF
+		}
 		nextElement := p.element.Next()
 		if nextElement == nil {
-			if err := p.buffer.tryFetchAndStore(); err != nil {
-				// move cursor the end of the current block
-				moveBytes := len(p.element.Value.(chunk)) - p.offset - 1
-				p.offset += moveBytes
-				p.address += int64(moveBytes)
+			err := p.buffer.tryFetchAndStore()
+			if err != nil {
+				if !errors.Is(err, io.EOF) {
+					p.moveCursorEndOfCurrentBlock()
+					return err
+				}
+				foundEOF = true
+			}
+			nextElement = p.element.Next()
+			if nextElement == nil {
+				p.moveCursorEndOfCurrentBlock()
+				if err == nil {
+					return io.EOF
+				}
 				return err
 			}
-			nextElement = p.buffer.lines.Back()
 		}
 		moveBytes := len(p.element.Value.(chunk)) - p.offset
 		n -= int64(moveBytes)

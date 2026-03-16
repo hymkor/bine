@@ -4,6 +4,7 @@ Changelog
 ### Bug fixes
 
 - Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
+- Fix data near EOF not shown on initial display (appears after pressing a key) (#60)
 
 ### New features
 
