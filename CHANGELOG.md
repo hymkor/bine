@@ -14,6 +14,7 @@ Changelog
 - `p` and `P` now insert multi-byte data from the internal buffer (#56)
 - Use standard error for screen output when standard output is redirected. (#57)
 - Allow `-` as the output file name to write the buffer to standard output (refused when standard output is a terminal). (#57)
+- Make `a` move the cursor to the inserted byte (#62)
 
 v0.8.0
 ------
