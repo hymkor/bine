@@ -11,7 +11,7 @@ Bine - A terminal binary editor
 
 A fast terminal binary editor with asynchronous loading and pipeline support.
 
-![ScreenShot](./screenshot.png)
+![DEMO](./demo.gif)
 
 Key Features
 ------------

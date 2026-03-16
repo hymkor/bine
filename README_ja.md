@@ -9,7 +9,7 @@ Bine - A terminal binary editor
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/hymkor/bine)
 <!-- -->
 
-![ScreenShot](./screenshot.png)
+![DEMO](./demo.gif)
 
 Bine は非同期ロードとパイプライン入出力に対応した高速なターミナル用バイナリエディターです
 
