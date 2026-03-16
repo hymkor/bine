@@ -44,7 +44,7 @@ Bine は非同期ロードとパイプライン入出力に対応した高速な
 
 ### Manual installation
 
-[Releases](https://github.com/hymkor/csvi/releases) よりバイナリパッケージをダウンロードして、実行ファイルを展開してください
+[Releases](https://github.com/hymkor/bine/releases) よりバイナリパッケージをダウンロードして、実行ファイルを展開してください
 
 <!-- stdout: go run github.com/hymkor/example-into-readme/cmd/how2install@master ja -->
 
