@@ -2,6 +2,7 @@ package large
 
 import (
 	"container/list"
+	"errors"
 	"io"
 )
 
@@ -96,7 +97,10 @@ func (p *Pointer) Skip(n int64) error {
 				p.address += int64(moveBytes)
 				return err
 			}
-			nextElement = p.buffer.lines.Back()
+			nextElement = p.element.Next()
+			if nextElement == nil {
+				return errors.New("large: (Pointer) Next: failed")
+			}
 		}
 		moveBytes := len(p.element.Value.(chunk)) - p.offset
 		n -= int64(moveBytes)
