@@ -59,4 +59,4 @@ docs:
 	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG.md > docs/CHANGELOG.html
 	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG_ja.md > docs/CHANGELOG_ja.html
 
-.PHONY: all test _dist dist clean manifest docs
+.PHONY: all test _dist dist clean manifest docs test
