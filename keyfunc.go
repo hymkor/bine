@@ -291,7 +291,7 @@ func writeFile(app *Application) (string, error) {
 	}
 	if fname == "-" {
 		if isatty.IsTerminal(os.Stdout.Fd()) {
-			return "", errors.New("stdout is a terminal. Refusing to write binary data.")
+			return "", errors.New("stdout is a terminal. Refusing to write binary data")
 		}
 		_, err := buffer.WriteTo(os.Stdout)
 		return "-", err
@@ -301,10 +301,7 @@ func writeFile(app *Application) (string, error) {
 			return true
 		}
 		if info.ReadOnly() {
-			if yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?") {
-				return true
-			}
-			return false
+			return yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
 		}
 		return yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
@@ -325,7 +322,7 @@ func writeFile(app *Application) (string, error) {
 		var e *safewrite.BackupError
 		if errors.As(err2, &e) {
 			return "",
-				fmt.Errorf("Failed to backup %q to %q (tmp: %q)",
+				fmt.Errorf("failed to backup %q to %q (tmp: %q)",
 					filepath.Base(e.Target),
 					filepath.Base(e.Backup),
 					filepath.Base(e.Tmp))
@@ -333,7 +330,7 @@ func writeFile(app *Application) (string, error) {
 		var re *safewrite.ReplaceError
 		if errors.As(err2, &re) {
 			return "",
-				fmt.Errorf("Failed to replace %q to %q",
+				fmt.Errorf("failed to replace %q to %q",
 					filepath.Base(re.Tmp),
 					filepath.Base(re.Target))
 		}
@@ -578,7 +575,6 @@ func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) 
 			}
 		}
 	}
-	return nil
 }
 
 func walkForward(p *large.Pointer) error { return p.Next() }
