@@ -152,6 +152,20 @@ Key-binding
 * `R`  
   Toggle direct edit mode. In this mode, pressing `0`–`9` or `a`–`f` directly overwrites the high nibble and then the low nibble of the byte under the cursor. Press `R` again to return to command mode.
 
+### Search
+
+Search data is entered in the input field at the bottom of the screen.  
+You can specify it as a byte sequence such as `0xFE 0xFF` or as a string like `"string"`.
+
+* `/`  
+  Search forward (toward increasing addresses) from the current cursor position
+* `?`  
+  Search backward (toward decreasing addresses) from the current cursor position
+* `n`  
+  Repeat the previous search in the same direction
+* `N`  
+  Repeat the previous search in the opposite direction
+
 ### Display
 
 * `Meta-U`  
