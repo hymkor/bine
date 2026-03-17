@@ -322,7 +322,7 @@ func writeFile(app *Application) (string, error) {
 		var e *safewrite.BackupError
 		if errors.As(err2, &e) {
 			return "",
-				fmt.Errorf("Failed to backup %q to %q (tmp: %q)",
+				fmt.Errorf("failed to backup %q to %q (tmp: %q)",
 					filepath.Base(e.Target),
 					filepath.Base(e.Backup),
 					filepath.Base(e.Tmp))
@@ -330,7 +330,7 @@ func writeFile(app *Application) (string, error) {
 		var re *safewrite.ReplaceError
 		if errors.As(err2, &re) {
 			return "",
-				fmt.Errorf("Failed to replace %q to %q",
+				fmt.Errorf("failed to replace %q to %q",
 					filepath.Base(re.Tmp),
 					filepath.Base(re.Target))
 		}
