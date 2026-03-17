@@ -578,7 +578,6 @@ func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) 
 			}
 		}
 	}
-	return nil
 }
 
 func walkForward(p *large.Pointer) error { return p.Next() }
