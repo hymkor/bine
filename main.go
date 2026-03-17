@@ -238,6 +238,8 @@ type Application struct {
 	undoFuncs    []func(app *Application) int64
 	editMode     editModeType
 	mark         int64
+	searchWord   string
+	searchRevert bool
 }
 
 func (app *Application) dataHeight() int {

@@ -549,6 +549,112 @@ func keyFuncMarking(app *Application) error {
 	return nil
 }
 
+func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) error {
+	p := app.cursor.Clone()
+	for {
+		if err := walk(p); err != nil {
+			if err == io.EOF {
+				app.message = "not found"
+			} else {
+				app.message = err.Error()
+			}
+			return nil
+		}
+		if p.Value() == exp[0] {
+			q := p.Clone()
+			i := 1
+			for {
+				if i >= len(exp) {
+					app.cursor = p
+					return nil
+				}
+				if err := q.Next(); err != nil {
+					break
+				}
+				if q.Value() != exp[i] {
+					break
+				}
+				i++
+			}
+		}
+	}
+	return nil
+}
+
+func walkForward(p *large.Pointer) error { return p.Next() }
+
+func walkBackward(p *large.Pointer) error { return p.Prev() }
+
+func keyFuncSearchForward(app *Application) error {
+	expStr := app.searchWord
+	if expStr == "" {
+		expStr = "0x"
+	}
+	var err error
+	expStr, err = getlineOr(app.out, "search forward>", expStr, nil)
+	if err != nil {
+		app.message = err.Error()
+		return nil
+	}
+	exp, err := evalExpression(expStr, app.encoding)
+	if err != nil {
+		return err
+	}
+	if len(exp) <= 0 {
+		return nil
+	}
+	app.searchWord = expStr
+	app.searchRevert = false
+	return searchBytes(app, exp, func(p *large.Pointer) error { return p.Next() })
+}
+
+func keyFuncSearchForwardNext(app *Application) error {
+	exp, err := evalExpression(app.searchWord, app.encoding)
+	if err != nil {
+		return err
+	}
+	f := walkForward
+	if app.searchRevert {
+		f = walkBackward
+	}
+	return searchBytes(app, exp, f)
+}
+
+func keyFuncSearchBackward(app *Application) error {
+	expStr := app.searchWord
+	if expStr == "" {
+		expStr = "0x"
+	}
+	var err error
+	expStr, err = getlineOr(app.out, "search backward>", expStr, nil)
+	if err != nil {
+		app.message = err.Error()
+		return nil
+	}
+	exp, err := evalExpression(expStr, app.encoding)
+	if err != nil {
+		return err
+	}
+	if len(exp) <= 0 {
+		return nil
+	}
+	app.searchWord = expStr
+	app.searchRevert = true
+	return searchBytes(app, exp, func(p *large.Pointer) error { return p.Prev() })
+}
+
+func keyFuncSearchBackwardNext(app *Application) error {
+	exp, err := evalExpression(app.searchWord, app.encoding)
+	if err != nil {
+		return err
+	}
+	f := walkBackward
+	if app.searchRevert {
+		f = walkForward
+	}
+	return searchBytes(app, exp, f)
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":         keyFuncUndo,
 	"i":         keyFuncInsertExp,
@@ -594,4 +700,8 @@ var jumpTable = map[string]func(this *Application) error{
 	"R":         keyFuncChangeMode,
 	"v":         keyFuncMarking,
 	"y":         keyFuncYank,
+	"/":         keyFuncSearchForward,
+	"n":         keyFuncSearchForwardNext,
+	"?":         keyFuncSearchBackward,
+	"N":         keyFuncSearchBackwardNext,
 }

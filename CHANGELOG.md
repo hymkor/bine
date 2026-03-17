@@ -17,6 +17,9 @@ Changelog
 - Use standard error for screen output when standard output is redirected. (#57)
 - Allow `-` as the output file name to write the buffer to standard output (refused when standard output is a terminal). (#57)
 - Make `a` move the cursor to the inserted byte (#62)
+- Add search functionality (#64)
+  - `/` and `?` to search forward/backward for a byte sequence or string
+  - `n` and `N` to repeat the previous search in the same or opposite direction
 
 v0.8.0
 ------
