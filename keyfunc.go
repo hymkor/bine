@@ -301,10 +301,7 @@ func writeFile(app *Application) (string, error) {
 			return true
 		}
 		if info.ReadOnly() {
-			if yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?") {
-				return true
-			}
-			return false
+			return yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
 		}
 		return yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
