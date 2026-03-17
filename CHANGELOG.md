@@ -10,16 +10,18 @@ Changelog
 
 ### New features
 
-- Selection mode (`v`): press `v` to start or end a selection range (#56)
-- Yank (`y`): copy selected region to internal buffer; copies byte under cursor if no selection (#56)
-- Delete and yank (`d`): delete selected region and copy to internal buffer; behaves as `x` if no selection (#56)
-- `p` and `P` now insert multi-byte data from the internal buffer (#56)
-- Use standard error for screen output when standard output is redirected. (#57)
-- Allow `-` as the output file name to write the buffer to standard output (refused when standard output is a terminal). (#57)
+- Add selection and editing features (#56)
+  - Selection mode (`v`)
+  - Yank (`y`) and delete+yank (`d`)
+  - `p` and `P` support multi-byte paste
+- Use standard error for screen output when standard output is redirected (#57)
+- Allow `-` as the output file name to write to standard output
+  (refused when standard output is a terminal) (#57)
 - Make `a` move the cursor to the inserted byte (#62)
 - Add search functionality (#64)
-  - `/` and `?` to search forward/backward for a byte sequence or string
-  - `n` and `N` to repeat the previous search in the same or opposite direction
+  - Supports searching for byte sequences and strings
+  - `/` and `?` search forward/backward
+  - `n` and `N` repeat the previous search
 
 v0.8.0
 ------
