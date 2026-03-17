@@ -1,6 +1,8 @@
 Changelog
 =========
 
+( English / [Japanese](./CHANGELOG_ja.md) )
+
 ### Bug fixes
 
 - Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
