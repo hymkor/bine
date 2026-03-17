@@ -291,7 +291,7 @@ func writeFile(app *Application) (string, error) {
 	}
 	if fname == "-" {
 		if isatty.IsTerminal(os.Stdout.Fd()) {
-			return "", errors.New("stdout is a terminal. Refusing to write binary data.")
+			return "", errors.New("stdout is a terminal. Refusing to write binary data")
 		}
 		_, err := buffer.WriteTo(os.Stdout)
 		return "-", err
