@@ -95,7 +95,11 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 		off = _CELL2_COLOR_OFF
 	}
 	if pointer.Address() == cursorAddress {
-		m.PrintByte(value, on, off, out)
+		if markedAddress >= 0 {
+			m.PrintByte(value, _SELECTED_ON, _SELECTED_OFF, out)
+		} else {
+			m.PrintByte(value, on, off, out)
+		}
 	} else if between(pointer.Address(), cursorAddress, markedAddress) {
 		fmt.Fprintf(out, "%s%02X%s", _SELECTED_ON, value, _SELECTED_OFF)
 	} else {
