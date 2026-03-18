@@ -195,8 +195,18 @@ func dupFromPointer(start, until int64, buffer *large.Buffer) (b []byte) {
 	return
 }
 
+const (
+	msgCanNotRemoveAll = "This operation would remove all data, which is not allowed."
+	msgTooLargeToCut   = "Selection is too large to cut."
+)
+
 // keyFuncRemoveByte removes the byte where cursor exists.
 func keyFuncRemoveByte(this *Application) error {
+	if this.buffer.Len() <= 1 {
+		this.message = msgCanNotRemoveAll
+		return nil
+	}
+
 	orgValue := this.cursor.Value()
 	address := this.cursor.Address()
 	orgDirty := this.dirty
@@ -228,7 +238,7 @@ func keyFuncYank(app *Application) error {
 	}
 	from, to := fromTo(app.mark, app.cursor.Address())
 	if to-from > 0x80000000 {
-		return errors.New("too long area")
+		return errors.New(msgTooLargeToCut)
 	}
 	app.mark = -1
 	app.clipBoard.Push(dupFromPointer(from, to, app.buffer))
@@ -240,14 +250,23 @@ func keyFuncDelete(app *Application) error {
 	var from, to int64
 
 	if app.mark < 0 {
+		if app.buffer.Len() <= 1 {
+			app.message = msgCanNotRemoveAll
+			return nil
+		}
 		from = app.cursor.Address()
 		to = from
 		orgValue = []byte{app.cursor.Value()}
 		app.cursor.Remove()
 	} else {
 		from, to = fromTo(app.mark, app.cursor.Address())
-		if to-from > 0x80000000 {
-			return errors.New("too long area")
+		if to-from >= app.buffer.Len() {
+			app.message = msgCanNotRemoveAll
+			return nil
+		}
+		if to-from > 0x8000000 {
+			app.message = msgTooLargeToCut
+			return nil
 		}
 		app.mark = -1
 		orgValue = dupFromPointer(from, to, app.buffer)

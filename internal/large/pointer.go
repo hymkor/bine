@@ -231,7 +231,11 @@ func (p *Pointer) RemoveSpace(space int) {
 			prev := p.element.Prev()
 			p.buffer.lines.Remove(p.element)
 			p.element = prev
-			p.offset = len(p.element.Value.(chunk)) - 1
+			if prev != nil {
+				p.offset = len(p.element.Value.(chunk)) - 1
+			} else {
+				p.offset = 0
+			}
 			p.buffer.allsize -= int64(len(block))
 		}
 		return
