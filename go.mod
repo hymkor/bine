@@ -10,6 +10,7 @@ require (
 	github.com/nyaosorg/go-inline-animation v0.3.1
 	github.com/nyaosorg/go-readline-ny v1.14.1
 	github.com/nyaosorg/go-ttyadapter v0.3.0
+	github.com/nyaosorg/go-windows-dbg v0.0.0-20240724174901-9645d9b1df23
 	github.com/nyaosorg/go-windows-mbcs v0.4.4
 	golang.org/x/sys v0.30.0
 )

@@ -79,7 +79,11 @@ func between(target, cursorAddress, markedAddress int64) bool {
 	return cursorAddress <= target && target <= markedAddress
 }
 
-func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m editModeType, out *strings.Builder) {
+func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder) {
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
+	m := app.editMode
+
 	value := pointer.Value()
 	var on, off string
 	i := pointer.Address() % 16
@@ -91,7 +95,11 @@ func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m ed
 		off = _CELL2_COLOR_OFF
 	}
 	if pointer.Address() == cursorAddress {
-		m.PrintByte(value, on, off, out)
+		if markedAddress >= 0 {
+			m.PrintByte(value, _SELECTED_ON, _SELECTED_OFF, out)
+		} else {
+			m.PrintByte(value, on, off, out)
+		}
 	} else if between(pointer.Address(), cursorAddress, markedAddress) {
 		fmt.Fprintf(out, "%s%02X%s", _SELECTED_ON, value, _SELECTED_OFF)
 	} else {
@@ -101,10 +109,10 @@ func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m ed
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
-func makeHexPart(pointer *large.Pointer, cursorAddress, markedAddress int64, mode editModeType, out *strings.Builder) bool {
+func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
 	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
 	for i := 0; i < LINE_SIZE; i++ {
-		makeHexOne(pointer, cursorAddress, markedAddress, mode, out)
+		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
 			for ; i < LINE_SIZE-1; i++ {
@@ -125,7 +133,10 @@ var dontview = map[rune]rune{
 	'\u202c': '.', // Pop Directional Formatting
 }
 
-func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress, markedAddress int64, out *strings.Builder) bool {
+func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
+	enc := app.encoding
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
 	for i := 0; i < LINE_SIZE; {
 		var c rune
 		startAddress := pointer.Address()
@@ -181,7 +192,8 @@ func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress,
 	return true
 }
 
-func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress, markedAddress int64, mode editModeType) (string, bool) {
+func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
+	cursorAddress := app.cursor.Address()
 	var out strings.Builder
 	off := ""
 	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
@@ -189,9 +201,8 @@ func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress,
 		off = _ANSI_UNDERLINE_OFF
 	}
 
-	asciiPointer := *pointer
-	hasNextLine := makeHexPart(pointer, cursorAddress, markedAddress, mode, &out)
-	makeAsciiPart(enc, &asciiPointer, cursorAddress, markedAddress, &out)
+	hasNextLine := app.makeHexPart(pointer.Clone(), &out)
+	app.makeAsciiPart(pointer, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
 	out.WriteString(off)
@@ -204,15 +215,20 @@ func (app *Application) View() (int, error) {
 	count := 0
 
 	cursor := app.window.Clone()
-	cursorAddress := app.cursor.Address()
 	for {
-		line, cont := makeLineImage(app.encoding, cursor, cursorAddress, app.mark, app.editMode)
+		line, cont := app.makeLineImage(cursor)
 
 		if f := app.cache[count]; f != line {
 			io.WriteString(out, line)
 			app.cache[count] = line
 		}
-		if !cont || count+1 >= h {
+		if !cont {
+			for i := count + 1; i < h; i++ {
+				app.cache[i] = ""
+			}
+			return count, nil
+		}
+		if count+1 >= h {
 			return count, nil
 		}
 		count++

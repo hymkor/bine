@@ -39,6 +39,14 @@ func NewPointer(b *Buffer) *Pointer {
 	}
 }
 
+func (p *Pointer) Chunk() []byte {
+	return []byte(p.element.Value.(chunk))
+}
+
+func (p *Pointer) Offset() int {
+	return p.offset
+}
+
 func NewPointerAt(at int64, b *Buffer) *Pointer {
 	p := NewPointer(b)
 	if p != nil {
@@ -180,13 +188,15 @@ func (p Pointer) AppendSpace(size int) []byte {
 	return block[p.offset+1 : p.offset+size+1]
 }
 
+type RemoveStatus int
+
 const (
-	RemoveSuccess = iota
+	RemoveSuccess RemoveStatus = iota
 	RemoveAll
 	RemoveRefresh
 )
 
-func (p *Pointer) Remove() int {
+func (p *Pointer) Remove() RemoveStatus {
 	p.buffer.allsize--
 	block := p.element.Value.(chunk)
 	if len(block) <= 1 {
@@ -194,7 +204,7 @@ func (p *Pointer) Remove() int {
 		if next := p.element.Next(); next != nil {
 			p.element = next
 			p.offset = 0
-			return RemoveSuccess
+			return RemoveRefresh
 		} else if prev := p.element.Prev(); prev != nil {
 			p.element = prev
 			p.address--
@@ -214,21 +224,33 @@ func (p *Pointer) Remove() int {
 	return RemoveSuccess
 }
 
-func (p *Pointer) RemoveSpace(space int) {
+func (p *Pointer) RemoveSpace(space int) RemoveStatus {
 	block := p.element.Value.(chunk)
 
 	if space <= 0 {
-		return
-	} else if p.offset == 0 && space > len(block) {
-		tmp := p.element.Next()
-		if tmp != nil {
+		return RemoveSuccess
+	}
+	if p.offset == 0 && space >= len(block) {
+		next := p.element.Next()
+		if next != nil {
 			p.buffer.lines.Remove(p.element)
-			p.element = tmp
+			p.element = next
 			p.buffer.allsize -= int64(len(block))
 			p.RemoveSpace(space - len(block))
+		} else {
+			prev := p.element.Prev()
+			p.buffer.lines.Remove(p.element)
+			p.element = prev
+			if prev != nil {
+				p.offset = len(p.element.Value.(chunk)) - 1
+			} else {
+				p.offset = 0
+			}
+			p.buffer.allsize -= int64(len(block))
 		}
-		return
-	} else if left := len(block) - p.offset; space > left {
+		return RemoveRefresh
+	}
+	if left := len(block) - p.offset; space > left {
 		p.element.Value = chunk(block[:p.offset])
 		tmp := p.element.Next()
 		p.buffer.allsize -= int64(left)
@@ -239,11 +261,12 @@ func (p *Pointer) RemoveSpace(space int) {
 		} else {
 			p.offset--
 		}
-		return
+		return RemoveSuccess
 	}
 	copy(block[p.offset:], block[p.offset+space:])
 	p.element.Value = chunk(block[:len(block)-space])
 	p.buffer.allsize -= int64(space)
+	return RemoveSuccess
 }
 
 func (b *Buffer) NewPointer() *Pointer {
