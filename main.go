@@ -79,7 +79,11 @@ func between(target, cursorAddress, markedAddress int64) bool {
 	return cursorAddress <= target && target <= markedAddress
 }
 
-func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m editModeType, out *strings.Builder) {
+func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder) {
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
+	m := app.editMode
+
 	value := pointer.Value()
 	var on, off string
 	i := pointer.Address() % 16
@@ -102,13 +106,9 @@ func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m ed
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
 func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
-	cursorAddress := app.cursor.Address()
-	markedAddress := app.mark
-	mode := app.editMode
-
 	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
 	for i := 0; i < LINE_SIZE; i++ {
-		makeHexOne(pointer, cursorAddress, markedAddress, mode, out)
+		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
 			for ; i < LINE_SIZE-1; i++ {
