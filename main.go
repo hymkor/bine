@@ -133,7 +133,10 @@ var dontview = map[rune]rune{
 	'\u202c': '.', // Pop Directional Formatting
 }
 
-func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress, markedAddress int64, out *strings.Builder) bool {
+func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
+	enc := app.encoding
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
 	for i := 0; i < LINE_SIZE; {
 		var c rune
 		startAddress := pointer.Address()
@@ -198,9 +201,8 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 		off = _ANSI_UNDERLINE_OFF
 	}
 
-	asciiPointer := *pointer
-	hasNextLine := app.makeHexPart(pointer, &out)
-	makeAsciiPart(app.encoding, &asciiPointer, cursorAddress, app.mark, &out)
+	hasNextLine := app.makeHexPart(pointer.Clone(), &out)
+	app.makeAsciiPart(pointer, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
 	out.WriteString(off)
