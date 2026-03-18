@@ -39,6 +39,14 @@ func NewPointer(b *Buffer) *Pointer {
 	}
 }
 
+func (p *Pointer) Chunk() []byte {
+	return []byte(p.element.Value.(chunk))
+}
+
+func (p *Pointer) Offset() int {
+	return p.offset
+}
+
 func NewPointerAt(at int64, b *Buffer) *Pointer {
 	p := NewPointer(b)
 	if p != nil {
