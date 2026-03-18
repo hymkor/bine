@@ -101,7 +101,11 @@ func makeHexOne(pointer *large.Pointer, cursorAddress, markedAddress int64, m ed
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
-func makeHexPart(pointer *large.Pointer, cursorAddress, markedAddress int64, mode editModeType, out *strings.Builder) bool {
+func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
+	mode := app.editMode
+
 	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
 	for i := 0; i < LINE_SIZE; i++ {
 		makeHexOne(pointer, cursorAddress, markedAddress, mode, out)
@@ -191,7 +195,7 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 	}
 
 	asciiPointer := *pointer
-	hasNextLine := makeHexPart(pointer, cursorAddress, app.mark, app.editMode, &out)
+	hasNextLine := app.makeHexPart(pointer, &out)
 	makeAsciiPart(app.encoding, &asciiPointer, cursorAddress, app.mark, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
