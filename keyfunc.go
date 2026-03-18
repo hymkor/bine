@@ -1,10 +1,12 @@
 package bine
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 
@@ -600,8 +602,14 @@ func keyFuncMarking(app *Application) error {
 }
 
 func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 	p := app.cursor.Clone()
 	for {
+		if err := ctx.Err(); err != nil {
+			app.message = "Search interrupted"
+			return nil
+		}
 		if err := walk(p); err != nil {
 			if err == io.EOF {
 				app.message = "not found"
