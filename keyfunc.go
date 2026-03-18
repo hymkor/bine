@@ -421,6 +421,20 @@ func keyFuncReplaceByte(this *Application) error {
 	return nil
 }
 
+func keyFuncDebug(this *Application) error {
+	debug("window:", this.window.Address(),
+		"offset:", this.window.Offset(),
+		"chunk:", this.window.Chunk())
+	debug("cursor:", this.cursor.Address(),
+		"offset:", this.cursor.Offset(),
+		"chunk:", this.cursor.Chunk())
+	this.buffer.DebugWalk(func(no int, chunk []byte) {
+		debug(" #", no, "size:", len(chunk), chunk)
+	})
+	debug("allsize:", this.buffer.Len())
+	return nil
+}
+
 func keyFuncRepaint(this *Application) error {
 	this.cache = map[int]string{}
 	return nil
@@ -739,4 +753,5 @@ var jumpTable = map[string]func(this *Application) error{
 	"n":         keyFuncSearchForwardNext,
 	"?":         keyFuncSearchBackward,
 	"N":         keyFuncSearchBackwardNext,
+	"\x1C":      keyFuncDebug,
 }
