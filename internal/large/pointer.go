@@ -219,16 +219,24 @@ func (p *Pointer) RemoveSpace(space int) {
 
 	if space <= 0 {
 		return
-	} else if p.offset == 0 && space > len(block) {
-		tmp := p.element.Next()
-		if tmp != nil {
+	}
+	if p.offset == 0 && space >= len(block) {
+		next := p.element.Next()
+		if next != nil {
 			p.buffer.lines.Remove(p.element)
-			p.element = tmp
+			p.element = next
 			p.buffer.allsize -= int64(len(block))
 			p.RemoveSpace(space - len(block))
+		} else {
+			prev := p.element.Prev()
+			p.buffer.lines.Remove(p.element)
+			p.element = prev
+			p.offset = len(p.element.Value.(chunk)) - 1
+			p.buffer.allsize -= int64(len(block))
 		}
 		return
-	} else if left := len(block) - p.offset; space > left {
+	}
+	if left := len(block) - p.offset; space > left {
 		p.element.Value = chunk(block[:p.offset])
 		tmp := p.element.Next()
 		p.buffer.allsize -= int64(left)
