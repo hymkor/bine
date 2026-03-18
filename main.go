@@ -201,8 +201,9 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 		off = _ANSI_UNDERLINE_OFF
 	}
 
-	hasNextLine := app.makeHexPart(pointer.Clone(), &out)
-	app.makeAsciiPart(pointer, &out)
+	asciiPointer := pointer.Clone()
+	hasNextLine := app.makeHexPart(pointer, &out)
+	app.makeAsciiPart(asciiPointer, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
 	out.WriteString(off)
