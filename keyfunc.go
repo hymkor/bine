@@ -201,8 +201,14 @@ func keyFuncRemoveByte(this *Application) error {
 	address := this.cursor.Address()
 	orgDirty := this.dirty
 	undo := func(app *Application) int64 {
-		p := large.NewPointerAt(address, app.buffer)
-		p.Insert(orgValue)
+		var p *large.Pointer
+		if address < app.buffer.Len() {
+			p = large.NewPointerAt(address, app.buffer)
+			p.Insert(orgValue)
+		} else {
+			p = large.NewPointerAt(address-1, app.buffer)
+			p.Append(orgValue)
+		}
 		app.dirty = orgDirty
 		return p.Address()
 	}
@@ -255,8 +261,15 @@ func keyFuncDelete(app *Application) error {
 
 	orgDirty := app.dirty
 	undo := func(app *Application) int64 {
-		p := app.buffer.NewPointerAt(from)
-		space := p.InsertSpace(int(to - from))
+		var p *large.Pointer
+		var space []byte
+		if from < app.buffer.Len() {
+			p = app.buffer.NewPointerAt(from)
+			space = p.InsertSpace(int(to - from))
+		} else {
+			p = app.buffer.NewPointerAt(from - 1)
+			space = p.AppendSpace(int(to - from))
+		}
 		copy(space, orgValue)
 		app.dirty = orgDirty
 		return p.Address()
