@@ -7,6 +7,7 @@ Changelog
 
 - Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
 - Fix data near EOF not shown on initial display (appears after pressing a key) (#60)
+- Fix an issue where the screen was not fully updated when the number of visible lines decreased. (#66)
 
 ### New features
 
