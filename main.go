@@ -222,7 +222,13 @@ func (app *Application) View() (int, error) {
 			io.WriteString(out, line)
 			app.cache[count] = line
 		}
-		if !cont || count+1 >= h {
+		if !cont {
+			for i := count + 1; i < h; i++ {
+				app.cache[i] = ""
+			}
+			return count, nil
+		}
+		if count+1 >= h {
 			return count, nil
 		}
 		count++
