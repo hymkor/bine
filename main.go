@@ -181,7 +181,8 @@ func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress,
 	return true
 }
 
-func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress, markedAddress int64, mode editModeType) (string, bool) {
+func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
+	cursorAddress := app.cursor.Address()
 	var out strings.Builder
 	off := ""
 	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
@@ -190,8 +191,8 @@ func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress,
 	}
 
 	asciiPointer := *pointer
-	hasNextLine := makeHexPart(pointer, cursorAddress, markedAddress, mode, &out)
-	makeAsciiPart(enc, &asciiPointer, cursorAddress, markedAddress, &out)
+	hasNextLine := makeHexPart(pointer, cursorAddress, app.mark, app.editMode, &out)
+	makeAsciiPart(app.encoding, &asciiPointer, cursorAddress, app.mark, &out)
 
 	out.WriteString(_ANSI_ERASE_LINE)
 	out.WriteString(off)
@@ -204,9 +205,8 @@ func (app *Application) View() (int, error) {
 	count := 0
 
 	cursor := app.window.Clone()
-	cursorAddress := app.cursor.Address()
 	for {
-		line, cont := makeLineImage(app.encoding, cursor, cursorAddress, app.mark, app.editMode)
+		line, cont := app.makeLineImage(cursor)
 
 		if f := app.cache[count]; f != line {
 			io.WriteString(out, line)
