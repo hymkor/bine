@@ -206,7 +206,7 @@ func keyFuncRemoveByte(this *Application) error {
 		this.message = msgCanNotRemoveAll
 		return nil
 	}
-
+	windowAddress := this.window.Address()
 	orgValue := this.cursor.Value()
 	address := this.cursor.Address()
 	orgDirty := this.dirty
@@ -225,8 +225,9 @@ func keyFuncRemoveByte(this *Application) error {
 	this.undoFuncs = append(this.undoFuncs, undo)
 	this.dirty = true
 	this.clipBoard.Push([]byte{this.cursor.Value()})
-	if this.cursor.Remove() == large.RemoveAll {
-		return io.EOF
+
+	if this.cursor.Remove() != large.RemoveSuccess {
+		this.window = this.buffer.NewPointerAt(windowAddress)
 	}
 	return nil
 }
@@ -249,6 +250,9 @@ func keyFuncDelete(app *Application) error {
 	var orgValue []byte
 	var from, to int64
 
+	var removeStatus large.RemoveStatus
+	windowAddress := app.window.Address()
+
 	if app.mark < 0 {
 		if app.buffer.Len() <= 1 {
 			app.message = msgCanNotRemoveAll
@@ -257,7 +261,7 @@ func keyFuncDelete(app *Application) error {
 		from = app.cursor.Address()
 		to = from
 		orgValue = []byte{app.cursor.Value()}
-		app.cursor.Remove()
+		removeStatus = app.cursor.Remove()
 	} else {
 		from, to = fromTo(app.mark, app.cursor.Address())
 		if to-from >= app.buffer.Len() {
@@ -275,7 +279,10 @@ func keyFuncDelete(app *Application) error {
 		} else {
 			app.cursor = app.buffer.NewPointerAt(from)
 		}
-		app.cursor.RemoveSpace(int(to - from))
+		removeStatus = app.cursor.RemoveSpace(int(to - from))
+	}
+	if removeStatus != large.RemoveSuccess {
+		app.window = app.buffer.NewPointerAt(windowAddress)
 	}
 
 	orgDirty := app.dirty
