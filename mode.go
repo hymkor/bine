@@ -9,7 +9,7 @@ import (
 type editModeType interface {
 	Handle(string, *Application) error
 	String() string
-	PrintByte(value byte, on, off string, w io.Writer)
+	PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer)
 	Reset() editModeType
 	Next() (editModeType, bool)
 	Prev() (editModeType, bool)
@@ -28,8 +28,8 @@ func (viewMode) String() string {
 	return "Command:"
 }
 
-func (d viewMode) PrintByte(value byte, on, off string, w io.Writer) {
-	fmt.Fprintf(w, "%s%02X%s", _CURSOR_COLOR_ON, value, _CURSOR_COLOR_OFF)
+func (d viewMode) PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer) {
+	fmt.Fprintf(w, "%s%02X%s", scheme.Cursor[0], value, scheme.Cursor[1])
 }
 
 func (viewMode) Reset() editModeType {
@@ -59,7 +59,7 @@ func (directMode) String() string {
 	return "Direct:"
 }
 
-func (d directMode) PrintByte(value byte, on, off string, w io.Writer) {
+func (d directMode) PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer) {
 	upper := (value >> 4) & 15
 	lower := value & 15
 	if d.Lower {
@@ -67,14 +67,14 @@ func (d directMode) PrintByte(value byte, on, off string, w io.Writer) {
 			on,
 			upper,
 			off,
-			_CURSOR_COLOR_ON,
+			scheme.Cursor[0],
 			lower,
-			_CURSOR_COLOR_OFF)
+			scheme.Cursor[1])
 	} else {
 		fmt.Fprintf(w, "%s%1X%s%s%1X%s",
-			_CURSOR_COLOR_ON,
+			scheme.Cursor[0],
 			upper,
-			_CURSOR_COLOR_OFF,
+			scheme.Cursor[1],
 			on,
 			lower,
 			off)
