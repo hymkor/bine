@@ -154,13 +154,23 @@ Key-binding
 
 ### Search
 
-Search data is entered in the input field at the bottom of the screen.  
-You can specify it as a byte sequence such as `0xFE 0xFF` or as a string like `"string"`.
-
 * `/`  
   Search forward (toward increasing addresses) from the current cursor position
 * `?`  
   Search backward (toward decreasing addresses) from the current cursor position
+
+After pressing `/` or `?`, enter the search pattern in the input field at the bottom of the screen.  
+You can specify the pattern in the following formats:
+
+- `U+XXXX`  
+  Unicode code point (e.g. `U+3042`)
+- `0xXX`  
+  Hexadecimal byte sequence (e.g. `0xFE 0xFF`)
+- Decimal numbers  
+  Byte values in decimal (e.g. `65 66 67`)
+- `"string"` or `u"string"`  
+  Text string (UTF-8; `u` prefix is optional)
+
 * `n`  
   Repeat the previous search in the same direction
 * `N`  

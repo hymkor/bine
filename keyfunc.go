@@ -605,6 +605,9 @@ func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 	p := app.cursor.Clone()
+	app.out.Write([]byte{' '})
+	end := animation.Dots.Progress(app.out)
+	defer end()
 	for {
 		if err := ctx.Err(); err != nil {
 			app.message = "Search interrupted"
@@ -655,7 +658,8 @@ func keyFuncSearchForward(app *Application) error {
 	}
 	exp, err := evalExpression(expStr, app.encoding)
 	if err != nil {
-		return err
+		app.message = err.Error()
+		return nil
 	}
 	if len(exp) <= 0 {
 		return nil
