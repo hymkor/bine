@@ -30,20 +30,20 @@ const LINE_SIZE = 16
 const (
 	_ANSI_CURSOR_OFF       = "\x1B[?25l"
 	_ANSI_CURSOR_ON        = "\x1B[?25h"
-	_ANSI_YELLOW           = "\x1B[0;33;1m"
+	_ANSI_YELLOW           = "\x1B[0;33;22m"
 	_ANSI_RESET            = "\x1B[0m"
 	_ANSI_UNDERLINE_ON     = "\x1B[4m"
 	_ANSI_UNDERLINE_OFF    = "\x1B[24m"
 	_ANSI_ERASE_LINE       = "\x1B[0K"
 	_ANSI_ERASE_SCRN_AFTER = "\x1B[0J"
 
-	_CURSOR_COLOR_ON  = "\x1B[37;40;1;7m"
+	_CURSOR_COLOR_ON  = "\x1B[39;49;1;7m"
 	_CURSOR_COLOR_OFF = "\x1B[27;22m"
-	_SELECTED_ON      = "\x1B[37;44m"
+	_SELECTED_ON      = "\x1B[39;44m"
 	_SELECTED_OFF     = "\x1B[39;49m"
-	_CELL1_COLOR_ON   = "\x1B[37;40;22m"
+	_CELL1_COLOR_ON   = "\x1B[39;49;22m"
 	_CELL1_COLOR_OFF  = ""
-	_CELL2_COLOR_ON   = "\x1B[37;40;1m"
+	_CELL2_COLOR_ON   = "\x1B[39;49;1m"
 	_CELL2_COLOR_OFF  = "\x1B[22m"
 )
 
