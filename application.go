@@ -48,7 +48,8 @@ func evalExpression(exp string, enc encoding.Encoding) ([]byte, error) {
 				bytes = append(bytes, bin...)
 			}
 		} else {
-			return bytes, fmt.Errorf("`%s` are ignored", exp)
+			return bytes, fmt.Errorf(`invalid search pattern: "%s" (e.g. U+3042, 0x41, 65, "abc")`, exp)
+
 		}
 	}
 	return bytes, nil
