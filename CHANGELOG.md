@@ -27,6 +27,7 @@ Changelog
 - Use standard error for screen output when standard output is redirected (#57)
 - Make `a` move the cursor to the inserted byte (#62)
 - Allow interrupting save operation with Ctrl-C (#71)
+- Improve color scheme to work well on both dark and light backgrounds (#72)
 
 v0.8.0
 ------
