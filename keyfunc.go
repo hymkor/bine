@@ -658,7 +658,8 @@ func keyFuncSearchForward(app *Application) error {
 	}
 	exp, err := evalExpression(expStr, app.encoding)
 	if err != nil {
-		return err
+		app.message = err.Error()
+		return nil
 	}
 	if len(exp) <= 0 {
 		return nil
