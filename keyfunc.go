@@ -319,6 +319,21 @@ func getlineOr(out io.Writer, prompt string, defaultString string, history readl
 
 var fnameHistory = simplehistory.New()
 
+func writeWithAnimationAndCancel(buffer *large.Buffer, fd io.Writer, out io.Writer) error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	out.Write([]byte{' '})
+	end := animation.Dots.Progress(out)
+	defer end()
+
+	_, err := buffer.WriteTo(ctx, fd)
+	if errors.Is(err, context.Canceled) {
+		return errors.New("Save interrupted")
+	}
+	return err
+}
+
 func writeFile(app *Application) (string, error) {
 	buffer := app.buffer
 	tty1 := app.tty1
@@ -330,12 +345,13 @@ func writeFile(app *Application) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if fname == "-" {
 		if isatty.IsTerminal(os.Stdout.Fd()) {
 			return "", errors.New("stdout is a terminal. Refusing to write binary data")
 		}
-		_, err := buffer.WriteTo(os.Stdout)
-		return "-", err
+		app.message = "Search interrupted"
+		return "-", writeWithAnimationAndCancel(buffer, os.Stdout, out)
 	}
 	prompt := func(info *safewrite.Info) bool {
 		if info.Status != safewrite.NONE {
@@ -351,10 +367,7 @@ func writeFile(app *Application) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	end := animation.Dots.Progress(out)
-	defer end()
-
-	_, err1 := buffer.WriteTo(fd)
+	err1 := writeWithAnimationAndCancel(buffer, fd, out)
 	err2 := fd.Close()
 	if err1 != nil {
 		return "", err1

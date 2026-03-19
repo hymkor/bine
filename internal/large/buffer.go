@@ -1,6 +1,7 @@
 package large
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -38,7 +39,7 @@ func (b *Buffer) tryFetchAndStore() error {
 	return err
 }
 
-func (b *Buffer) ReadAll() error {
+func (b *Buffer) ReadAll(ctx context.Context) error {
 	for {
 		err := b.fetchAndStore()
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -47,11 +48,14 @@ func (b *Buffer) ReadAll() error {
 			}
 			return err
 		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 	}
 }
 
-func (b *Buffer) WriteTo(w io.Writer) (int64, error) {
-	if err := b.ReadAll(); err != nil {
+func (b *Buffer) WriteTo(ctx context.Context, w io.Writer) (int64, error) {
+	if err := b.ReadAll(ctx); err != nil {
 		return 0, err
 	}
 	n := int64(0)
@@ -59,6 +63,9 @@ func (b *Buffer) WriteTo(w io.Writer) (int64, error) {
 		m, err := w.Write(p.Value.(chunk))
 		n += int64(m)
 		if err != nil {
+			return n, err
+		}
+		if err := ctx.Err(); err != nil {
 			return n, err
 		}
 	}
