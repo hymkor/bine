@@ -20,7 +20,7 @@ func getline(out io.Writer, prompt string, defaultStr string, history readline.I
 		Default: defaultStr,
 		Cursor:  65535,
 		PromptWriter: func(w io.Writer) (int, error) {
-			fmt.Fprintf(w, "\r\x1B[0;33;40;1m%s%s", prompt, _ANSI_ERASE_LINE)
+			fmt.Fprintf(w, "\r\x1B[0;33;22m%s%s", prompt, _ANSI_ERASE_LINE)
 			return 2, nil
 		},
 		LineFeedWriter: func(readline.Result, io.Writer) (int, error) { return 0, nil },
