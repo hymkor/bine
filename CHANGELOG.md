@@ -19,6 +19,7 @@ Changelog
   - Supports searching for byte sequences and strings
   - `/` and `?` search forward/backward
   - `n` and `N` repeat the previous search
+- Respect `NO_COLOR` environment variable to disable colored output (per no-color.org) (#73)
 
 ### Improve
 
