@@ -1,6 +1,7 @@
 package bine
 
 import (
+	"context"
 	"io"
 	"strings"
 	"testing"
@@ -38,7 +39,8 @@ func try(
 		t.Fatal(err.Error())
 		return
 	}
-	app.buffer.ReadAll()
+	ctx := context.Background()
+	app.buffer.ReadAll(ctx)
 
 	for _, f := range funcs {
 		if err := f(app); err != nil {
@@ -49,7 +51,7 @@ func try(
 	}
 
 	var output strings.Builder
-	app.buffer.WriteTo(&output)
+	app.buffer.WriteTo(ctx, &output)
 	app.Close()
 	if outputStr := output.String(); outputStr != expect {
 		t.Fatalf("expect '%s' but '%s'", expect, outputStr)
