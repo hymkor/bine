@@ -15,14 +15,18 @@ Changelog
   - Selection mode (`v`)
   - Yank (`y`) and delete+yank (`d`)
   - `p` and `P` support multi-byte paste
-- Use standard error for screen output when standard output is redirected (#57)
-- Allow `-` as the output file name to write to standard output
-  (refused when standard output is a terminal) (#57)
-- Make `a` move the cursor to the inserted byte (#62)
 - Add search functionality (#64)
   - Supports searching for byte sequences and strings
   - `/` and `?` search forward/backward
   - `n` and `N` repeat the previous search
+
+### Improve
+
+- Allow `-` as the output file name to write to standard output
+  (refused when standard output is a terminal) (#57)
+- Use standard error for screen output when standard output is redirected (#57)
+- Make `a` move the cursor to the inserted byte (#62)
+- Allow interrupting save operation with Ctrl-C (#71)
 
 v0.8.0
 ------
