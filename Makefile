@@ -21,14 +21,14 @@ EXE=$(shell $(GO) env GOEXE)
 
 all:
 	$(GO) fmt ./...
-	$(SET) "CGO_ENABLED=0" && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
+	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/bine"
 
 test:
 	$(GO) fmt ./...
 	$(GO) test -v
 
 _dist:
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) && $(GO) build -C cmd/bine $(GOOPT) -o $(CURDIR)
+	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/bine"
 	zip -9 $(NAME)-$(VERSION)-$(GOOS)-$(GOARCH).zip $(NAME)$(EXE)
 
 dist:
