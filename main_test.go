@@ -1,6 +1,7 @@
 package bine
 
 import (
+	"context"
 	"io"
 	"strings"
 	"testing"
@@ -38,7 +39,8 @@ func try(
 		t.Fatal(err.Error())
 		return
 	}
-	app.buffer.ReadAll()
+	ctx := context.Background()
+	app.buffer.ReadAll(ctx)
 
 	for _, f := range funcs {
 		if err := f(app); err != nil {
@@ -49,7 +51,7 @@ func try(
 	}
 
 	var output strings.Builder
-	app.buffer.WriteTo(&output)
+	app.buffer.WriteTo(ctx, &output)
 	app.Close()
 	if outputStr := output.String(); outputStr != expect {
 		t.Fatalf("expect '%s' but '%s'", expect, outputStr)
@@ -165,4 +167,52 @@ func TestAppendAndUndo(t *testing.T) {
 		keyFuncGoEndOfLine,
 		_append(`"abcdef"`),
 		keyFuncUndo)
+}
+
+func TestCutAreaAndPasteAfter(t *testing.T) {
+	try(t, "012345", "450123",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncDelete,
+		keyFuncGoEndOfFile,
+		keyFuncPasteAfter)
+}
+
+func TestCutAreaAndPasteBefore(t *testing.T) {
+	try(t, "012345", "401235",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncDelete,
+		keyFuncGoEndOfFile,
+		keyFuncPasteBefore)
+}
+
+func TestCopyAreaAndPasteAfter(t *testing.T) {
+	try(t, "012345", "0123450123",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncYank,
+		keyFuncGoEndOfFile,
+		keyFuncPasteAfter)
+}
+
+func TestCopyAreaAndPasteBefore(t *testing.T) {
+	try(t, "012345", "0123401235",
+		keyFuncGoBeginOfFile,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncYank,
+		keyFuncGoEndOfFile,
+		keyFuncPasteBefore)
 }

@@ -9,31 +9,34 @@ Bine - A terminal binary editor
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/hymkor/bine)
 <!-- -->
 
-![ScreenShot](./screenshot.png)
+A fast terminal binary editor with asynchronous loading and pipeline support.
+
+![DEMO](./demo.gif)
 
 Key Features
 ------------
 
-* **Fast startup with asynchronous loading**
+* **Fast startup with asynchronous loading**  
   The viewer launches instantly and loads data in the background, allowing immediate interaction even with large files.
 
-* **Supports both files and standard input**
-  `bine` can read binary data not only from files but also from standard input, making it easy to use in pipelines.
+* **Split-view with hex and character representations**  
+  The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.
 
-* **Vi-style navigation**
+* **Vi-style navigation**  
   Navigation keys follow the familiar `vi` keybindings (`h`, `j`, `k`, `l`, etc.), allowing smooth movement for experienced users.  
 (Note: File name input uses Emacs-style key bindings.)
 
-* **Split-view with hex and character representations**
-  The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.
+* **Supports files and standard input/output**  
+  `bine` can read binary data from files or standard input.
+  Edited data can also be written to standard output, making it suitable for use in command pipelines.
 
-* **Smart decoding with character annotations**
+* **Smart decoding with character annotations**  
   Multi-byte characters are visually grouped based on byte structure. Special code points such as BOMs and control characters (e.g., newlines) are annotated with readable names or symbols, making it easier to understand mixed binary/text content and debug encoding issues.
 
-* **Minimal screen usage**
+* **Minimal screen usage**  
   `bine` only uses as many terminal lines as needed (1 line = 16 bytes), without occupying the full screen. This makes it easy to inspect or edit small binary data while still seeing the surrounding terminal output.
 
-* **Cross-platform**
+* **Cross-platform**  
   Written in Go, `bine` runs on both Windows and Linux. It should also build and work on other Unix-like systems.
 
 Install
@@ -82,6 +85,7 @@ go install github.com/hymkor/bine/cmd/bine@latest
 Note: `go install` places the executable in `$HOME/go/bin` or `$GOPATH/bin`, so you need to add this directory to your `$PATH` to run `bine`.
 <!-- -->
 
+
 Usage
 -----
 
@@ -92,8 +96,10 @@ $ bine [FILES...]
 or
 
 ```
-$ cat FILE | bine
+$ bine < in.bin > out.bin
 ```
+
+Edit the data and save using `-` as the file name to write the edited data to standard output.
 
 Key-binding
 -----------
@@ -133,12 +139,42 @@ Key-binding
   Insert `0x00` to the right of the cursor
 * `x`, `DEL`  
   Delete the byte under the cursor and save it to the internal buffer
+* `v`  
+  Start or end selection mode
+* `y`  
+  Copy the selected region to the internal buffer. If nothing is selected, copies the byte under the cursor
+* `d`  
+  Delete the selected region and copy it to the internal buffer. If nothing is selected, behaves the same as `x`
 * `p`  
-  Insert the byte from the internal buffer to the right of the cursor
+  Insert data from the internal buffer to the right of the cursor
 * `P`  
-  Insert the byte from the internal buffer to the left of the cursor
+  Insert data from the internal buffer to the left of the cursor
 * `R`  
   Toggle direct edit mode. In this mode, pressing `0`–`9` or `a`–`f` directly overwrites the high nibble and then the low nibble of the byte under the cursor. Press `R` again to return to command mode.
+
+### Search
+
+* `/`  
+  Search forward (toward increasing addresses) from the current cursor position
+* `?`  
+  Search backward (toward decreasing addresses) from the current cursor position
+
+After pressing `/` or `?`, enter the search pattern in the input field at the bottom of the screen.  
+You can specify the pattern in the following formats:
+
+- `U+XXXX`  
+  Unicode code point (e.g. `U+3042`)
+- `0xXX`  
+  Hexadecimal byte sequence (e.g. `0xFE 0xFF`)
+- Decimal numbers  
+  Byte values in decimal (e.g. `65 66 67`)
+- `"string"` or `u"string"`  
+  Text string (UTF-8; `u` prefix is optional)
+
+* `n`  
+  Repeat the previous search in the same direction
+* `N`  
+  Repeat the previous search in the opposite direction
 
 ### Display
 

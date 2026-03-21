@@ -1141,16 +1141,52 @@ a.permalink:hover{
 </head><body>
 <div class="main markdown-body">
 <h1 id="changelog">Changelog</h1>
+<p>( English / <a href="./CHANGELOG_ja.html">Japanese</a> )</p>
+<h2 id="v090">v0.9.0</h2>
+<p>Mar 21, 2026</p>
+<h3 id="bug-fixes">Bug fixes</h3>
+<ul>
+<li>Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)</li>
+<li>Fix data near EOF not shown on initial display (appears after pressing a key) (#60)</li>
+<li>Fix an issue where the screen was not fully updated when the number of visible lines decreased. (#66)</li>
+</ul>
+<h3 id="new-features">New features</h3>
+<ul>
+<li>Add selection and editing features (#56)
+<ul>
+<li>Selection mode (<code>v</code>)</li>
+<li>Yank (<code>y</code>) and delete+yank (<code>d</code>)</li>
+<li><code>p</code> and <code>P</code> support multi-byte paste</li>
+</ul>
+</li>
+<li>Add search functionality (#64)
+<ul>
+<li>Supports searching for byte sequences and strings</li>
+<li><code>/</code> and <code>?</code> search forward/backward</li>
+<li><code>n</code> and <code>N</code> repeat the previous search</li>
+</ul>
+</li>
+<li>Respect <code>NO_COLOR</code> environment variable to disable colored output (per no-color.org) (#73)</li>
+</ul>
+<h3 id="improve">Improve</h3>
+<ul>
+<li>Allow <code>-</code> as the output file name to write to standard output
+(refused when standard output is a terminal) (#57)</li>
+<li>Use standard error for screen output when standard output is redirected (#57)</li>
+<li>Make <code>a</code> move the cursor to the inserted byte (#62)</li>
+<li>Allow interrupting save operation with Ctrl-C (#71)</li>
+<li>Improve color scheme to work well on both dark and light backgrounds (#72)</li>
+</ul>
 <h2 id="v080">v0.8.0</h2>
 <p>Mar 13, 2026</p>
-<h3 id="bug-fixes">Bug fixes</h3>
+<h3 id="bug-fixes-1">Bug fixes</h3>
 <ul>
 <li>Fixed an issue where the version string was empty when built without GNU Make.<br />
 The version string is now updated via <code>make bump</code> during the release process. (#33)</li>
 <li>Fixed an issue where the progress animation was cleared at the wrong position during long save operations. (<a href="https://github.com/nyaosorg/go-inline-animation/pull/6">go-inline-animation#6</a>, <a href="https://github.com/nyaosorg/go-inline-animation/pull/7">go-inline-animation#7</a>, #36)</li>
 <li>Preserve original file permissions when overwriting files (#37,#42)</li>
 </ul>
-<h3 id="new-features">New Features</h3>
+<h3 id="new-features-1">New Features</h3>
 <ul>
 <li>Add direct edit mode that allows directly overwriting hexadecimal values under the cursor. Toggle with <code>Shift</code>+<code>R</code> (switches from the traditional command mode). (#43)</li>
 <li>Indicate READONLY files explicitly when prompting for overwrite confirmation (#37)</li>
@@ -1286,10 +1322,17 @@ The version string is now updated via <code>make bump</code> during the release 
 <ul>
 <li><a href="#changelog">Changelog</a>
 <ul>
-<li><a href="#v080">v0.8.0</a>
+<li><a href="#v090">v0.9.0</a>
 <ul>
 <li><a href="#bug-fixes">Bug fixes</a></li>
-<li><a href="#new-features">New Features</a></li>
+<li><a href="#new-features">New features</a></li>
+<li><a href="#improve">Improve</a></li>
+</ul>
+</li>
+<li><a href="#v080">v0.8.0</a>
+<ul>
+<li><a href="#bug-fixes-1">Bug fixes</a></li>
+<li><a href="#new-features-1">New Features</a></li>
 <li><a href="#documents">Documents</a></li>
 </ul>
 </li>

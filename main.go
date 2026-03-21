@@ -12,37 +12,22 @@ import (
 	"unicode/utf8"
 
 	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
 
 	"github.com/nyaosorg/go-ttyadapter"
 	"github.com/nyaosorg/go-ttyadapter/tty8pe"
 
+	"github.com/hymkor/go-safewrite/perm"
+
+	"github.com/hymkor/bine/internal/ansi"
 	"github.com/hymkor/bine/internal/argf"
 	"github.com/hymkor/bine/internal/encoding"
 	"github.com/hymkor/bine/internal/large"
 	"github.com/hymkor/bine/internal/nonblock"
-	"github.com/hymkor/go-safewrite/perm"
 )
 
 const LINE_SIZE = 16
-
-const (
-	_ANSI_CURSOR_OFF       = "\x1B[?25l"
-	_ANSI_CURSOR_ON        = "\x1B[?25h"
-	_ANSI_YELLOW           = "\x1B[0;33;1m"
-	_ANSI_RESET            = "\x1B[0m"
-	_ANSI_UNDERLINE_ON     = "\x1B[4m"
-	_ANSI_UNDERLINE_OFF    = "\x1B[24m"
-	_ANSI_ERASE_LINE       = "\x1B[0K"
-	_ANSI_ERASE_SCRN_AFTER = "\x1B[0J"
-
-	_CURSOR_COLOR_ON  = "\x1B[37;40;1;7m"
-	_CURSOR_COLOR_OFF = "\x1B[27;22m"
-	_CELL1_COLOR_ON   = "\x1B[37;40;22m"
-	_CELL1_COLOR_OFF  = ""
-	_CELL2_COLOR_ON   = "\x1B[37;40;1m"
-	_CELL2_COLOR_OFF  = "\x1B[22m"
-)
 
 const (
 	// for Line feed
@@ -66,19 +51,39 @@ const (
 	_RIGHTWARDS_TRIANGLE_HEADED_ARROW_TO_BAR = '\u2B72' // ->|
 )
 
-func makeHexOne(pointer *large.Pointer, cursorAddress int64, m editModeType, out *strings.Builder) {
+func between(target, cursorAddress, markedAddress int64) bool {
+	if markedAddress < 0 {
+		return false
+	}
+	if markedAddress < cursorAddress {
+		return markedAddress <= target && target <= cursorAddress
+	}
+	return cursorAddress <= target && target <= markedAddress
+}
+
+func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder) {
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
+	m := app.editMode
+
 	value := pointer.Value()
 	var on, off string
 	i := pointer.Address() % 16
 	if ((i >> 2) & 1) == 0 {
-		on = _CELL1_COLOR_ON
-		off = _CELL1_COLOR_OFF
+		on = app.Scheme.Cell1[0]
+		off = app.Scheme.Cell1[1]
 	} else {
-		on = _CELL2_COLOR_ON
-		off = _CELL2_COLOR_OFF
+		on = app.Scheme.Cell2[0]
+		off = app.Scheme.Cell2[1]
 	}
 	if pointer.Address() == cursorAddress {
-		m.PrintByte(value, on, off, out)
+		if markedAddress >= 0 {
+			m.PrintByte(value, app.Scheme.Select[0], app.Scheme.Select[1], app.Scheme, out)
+		} else {
+			m.PrintByte(value, on, off, app.Scheme, out)
+		}
+	} else if between(pointer.Address(), cursorAddress, markedAddress) {
+		fmt.Fprintf(out, "%s%02X%s", app.Scheme.Select[0], value, app.Scheme.Select[1])
 	} else {
 		fmt.Fprintf(out, "%s%02X%s", on, value, off)
 	}
@@ -86,10 +91,10 @@ func makeHexOne(pointer *large.Pointer, cursorAddress int64, m editModeType, out
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
-func makeHexPart(pointer *large.Pointer, cursorAddress int64, mode editModeType, out *strings.Builder) bool {
-	fmt.Fprintf(out, "%s%08X%s ", _CELL2_COLOR_ON, pointer.Address(), _CELL2_COLOR_OFF)
+func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
+	fmt.Fprintf(out, "%s%08X%s ", app.Scheme.Cell2[0], pointer.Address(), app.Scheme.Cell2[1])
 	for i := 0; i < LINE_SIZE; i++ {
-		makeHexOne(pointer, cursorAddress, mode, out)
+		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
 			for ; i < LINE_SIZE-1; i++ {
@@ -110,7 +115,10 @@ var dontview = map[rune]rune{
 	'\u202c': '.', // Pop Directional Formatting
 }
 
-func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress int64, out *strings.Builder) bool {
+func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
+	enc := app.encoding
+	cursorAddress := app.cursor.Address()
+	markedAddress := app.mark
 	for i := 0; i < LINE_SIZE; {
 		var c rune
 		startAddress := pointer.Address()
@@ -141,13 +149,17 @@ func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress 
 		}
 
 		if startAddress <= cursorAddress && cursorAddress <= pointer.Address() {
-			out.WriteString(_CURSOR_COLOR_ON)
+			out.WriteString(app.Scheme.Cursor[0])
 			out.WriteRune(c)
-			out.WriteString(_CURSOR_COLOR_OFF)
+			out.WriteString(app.Scheme.Cursor[1])
+		} else if between(startAddress, cursorAddress, markedAddress) {
+			out.WriteString(app.Scheme.Select[0])
+			out.WriteRune(c)
+			out.WriteString(app.Scheme.Select[1])
 		} else {
-			out.WriteString(_CELL1_COLOR_ON)
+			out.WriteString(app.Scheme.Cell1[0])
 			out.WriteRune(c)
-			out.WriteString(_CELL1_COLOR_OFF)
+			out.WriteString(app.Scheme.Cell1[1])
 		}
 		if length == 3 {
 			out.WriteByte(' ')
@@ -162,19 +174,20 @@ func makeAsciiPart(enc encoding.Encoding, pointer *large.Pointer, cursorAddress 
 	return true
 }
 
-func makeLineImage(enc encoding.Encoding, pointer *large.Pointer, cursorAddress int64, mode editModeType) (string, bool) {
+func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
+	cursorAddress := app.cursor.Address()
 	var out strings.Builder
 	off := ""
 	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
-		out.WriteString(_ANSI_UNDERLINE_ON)
-		off = _ANSI_UNDERLINE_OFF
+		out.WriteString(ansi.UnderlineOn)
+		off = ansi.UnderlineOff
 	}
 
-	asciiPointer := *pointer
-	hasNextLine := makeHexPart(pointer, cursorAddress, mode, &out)
-	makeAsciiPart(enc, &asciiPointer, cursorAddress, &out)
+	asciiPointer := pointer.Clone()
+	hasNextLine := app.makeHexPart(pointer, &out)
+	app.makeAsciiPart(asciiPointer, &out)
 
-	out.WriteString(_ANSI_ERASE_LINE)
+	out.WriteString(ansi.EraseLine)
 	out.WriteString(off)
 	return out.String(), hasNextLine
 }
@@ -185,15 +198,20 @@ func (app *Application) View() (int, error) {
 	count := 0
 
 	cursor := app.window.Clone()
-	cursorAddress := app.cursor.Address()
 	for {
-		line, cont := makeLineImage(app.encoding, cursor, cursorAddress, app.editMode)
+		line, cont := app.makeLineImage(cursor)
 
 		if f := app.cache[count]; f != line {
 			io.WriteString(out, line)
 			app.cache[count] = line
 		}
-		if !cont || count+1 >= h {
+		if !cont {
+			for i := count + 1; i < h; i++ {
+				app.cache[i] = ""
+			}
+			return count, nil
+		}
+		if count+1 >= h {
 			return count, nil
 		}
 		count++
@@ -215,9 +233,13 @@ type Application struct {
 	savePath     string
 	message      string
 	cache        map[int]string
+	Scheme       *Scheme
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application) int64
 	editMode     editModeType
+	mark         int64
+	searchWord   string
+	searchRevert bool
 }
 
 func (app *Application) dataHeight() int {
@@ -247,6 +269,11 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 		buffer:    large.NewBuffer(in),
 		clipBoard: NewClip(),
 		editMode:  viewMode{},
+		Scheme:    colorScheme,
+		mark:      -1,
+	}
+	if noColor := os.Getenv("NO_COLOR"); len(noColor) > 0 {
+		this.Scheme = monoScheme
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -263,13 +290,13 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 	if err != nil {
 		return nil, err
 	}
-	io.WriteString(out, _ANSI_CURSOR_OFF)
+	io.WriteString(out, ansi.CursorOff)
 	return this, nil
 }
 
 func (app *Application) Close() error {
-	io.WriteString(app.out, _ANSI_CURSOR_ON)
-	io.WriteString(app.out, _ANSI_RESET)
+	io.WriteString(app.out, ansi.CursorOn)
+	io.WriteString(app.out, ansi.Reset)
 
 	if app.tty1 != nil {
 		app.tty1.Close()
@@ -286,7 +313,7 @@ var unicodeName = map[rune]string{
 }
 
 func (app *Application) printDefaultStatusBar() {
-	io.WriteString(app.out, _ANSI_YELLOW)
+	io.WriteString(app.out, app.Scheme.Status)
 	if app.dirty {
 		io.WriteString(app.out, "*")
 	} else {
@@ -316,8 +343,8 @@ func (app *Application) printDefaultStatusBar() {
 		app.cursor.Address(),
 		app.buffer.Len())
 
-	io.WriteString(app.out, _ANSI_ERASE_SCRN_AFTER)
-	io.WriteString(app.out, _ANSI_RESET)
+	io.WriteString(app.out, ansi.EraseScrnAfter)
+	io.WriteString(app.out, ansi.Reset)
 }
 
 func (app *Application) shiftWindowToSeeCursorLine() {
@@ -337,12 +364,16 @@ func (app *Application) shiftWindowToSeeCursorLine() {
 func Run(args []string) error {
 	defer perm.RestoreAll()
 
-	disable := colorable.EnableColorsStdout(nil)
-	if disable != nil {
-		defer disable()
+	var out io.Writer
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		disable := colorable.EnableColorsStdout(nil)
+		if disable != nil {
+			defer disable()
+		}
+		out = colorable.NewColorableStdout()
+	} else {
+		out = colorable.NewColorableStderr()
 	}
-	out := colorable.NewColorableStdout()
-
 	in, err := argf.New(args)
 	if err != nil {
 		return err
@@ -387,7 +418,7 @@ func Run(args []string) error {
 			app.cache = map[int]string{}
 			lastWidth = app.screenWidth
 			lastHeight = app.screenHeight
-			io.WriteString(app.out, _ANSI_CURSOR_OFF)
+			io.WriteString(app.out, ansi.CursorOff)
 		}
 		lf, err := app.View()
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -399,10 +430,10 @@ func Run(args []string) error {
 		io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 		lf++
 		if app.message != "" {
-			io.WriteString(app.out, _ANSI_YELLOW)
+			io.WriteString(app.out, app.Scheme.Status)
 			io.WriteString(app.out, runewidth.Truncate(app.message, app.screenWidth-1, ""))
-			io.WriteString(app.out, _ANSI_ERASE_SCRN_AFTER)
-			io.WriteString(app.out, _ANSI_RESET)
+			io.WriteString(app.out, ansi.EraseScrnAfter)
+			io.WriteString(app.out, ansi.Reset)
 		} else {
 			app.printDefaultStatusBar()
 		}

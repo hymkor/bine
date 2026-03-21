@@ -1,7 +1,37 @@
 Changelog
 =========
+( English / [Japanese](./CHANGELOG_ja.md) )
+
+v0.9.0
+-------
+Mar 21, 2026
+
+### Bug fixes
 
 - Fix an issue where the space between the hex column and the character column was one character shorter on the last line (#55)
+- Fix data near EOF not shown on initial display (appears after pressing a key) (#60)
+- Fix an issue where the screen was not fully updated when the number of visible lines decreased. (#66)
+
+### New features
+
+- Add selection and editing features (#56)
+  - Selection mode (`v`)
+  - Yank (`y`) and delete+yank (`d`)
+  - `p` and `P` support multi-byte paste
+- Add search functionality (#64)
+  - Supports searching for byte sequences and strings
+  - `/` and `?` search forward/backward
+  - `n` and `N` repeat the previous search
+- Respect `NO_COLOR` environment variable to disable colored output (per no-color.org) (#73)
+
+### Improve
+
+- Allow `-` as the output file name to write to standard output
+  (refused when standard output is a terminal) (#57)
+- Use standard error for screen output when standard output is redirected (#57)
+- Make `a` move the cursor to the inserted byte (#62)
+- Allow interrupting save operation with Ctrl-C (#71)
+- Improve color scheme to work well on both dark and light backgrounds (#72)
 
 v0.8.0
 ------

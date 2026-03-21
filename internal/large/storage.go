@@ -33,3 +33,12 @@ func (b *Storage) Store(data []byte, err error) bool {
 	}
 	return !errors.Is(err, os.ErrDeadlineExceeded)
 }
+
+func (s *Storage) DebugWalk(f func(int, []byte)) {
+	i := 0
+	for p := s.lines.Front(); p != nil; p = p.Next() {
+		block := p.Value.(chunk)
+		f(i, []byte(block))
+		i++
+	}
+}
