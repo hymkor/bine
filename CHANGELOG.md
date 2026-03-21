@@ -1,7 +1,10 @@
 Changelog
 =========
-
 ( English / [Japanese](./CHANGELOG_ja.md) )
+
+v0.9.0
+-------
+Mar 21, 2026
 
 ### Bug fixes
 
