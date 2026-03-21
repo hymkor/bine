@@ -1148,36 +1148,38 @@ a.permalink:hover{
 <a href="https://pkg.go.dev/github.com/hymkor/bine"><img src="https://pkg.go.dev/badge/github.com/hymkor/bine.svg" alt="Go Reference" /></a>
 <a href="https://github.com/hymkor/bine"><img src="https://img.shields.io/badge/github-repo-blue?logo=github" alt="GitHub" /></a></p>
 <!-- -->
-<p><img src="./screenshot.png" alt="ScreenShot" /></p>
+<p>A fast terminal binary editor with asynchronous loading and pipeline support.</p>
+<p><img src="./demo.gif" alt="DEMO" /></p>
 <h2 id="key-features">Key Features</h2>
 <ul>
 <li>
-<p><strong>Fast startup with asynchronous loading</strong>
+<p><strong>Fast startup with asynchronous loading</strong><br />
 The viewer launches instantly and loads data in the background, allowing immediate interaction even with large files.</p>
 </li>
 <li>
-<p><strong>Supports both files and standard input</strong>
-<code>bine</code> can read binary data not only from files but also from standard input, making it easy to use in pipelines.</p>
+<p><strong>Split-view with hex and character representations</strong><br />
+The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.</p>
 </li>
 <li>
-<p><strong>Vi-style navigation</strong>
+<p><strong>Vi-style navigation</strong><br />
 Navigation keys follow the familiar <code>vi</code> keybindings (<code>h</code>, <code>j</code>, <code>k</code>, <code>l</code>, etc.), allowing smooth movement for experienced users.<br />
 (Note: File name input uses Emacs-style key bindings.)</p>
 </li>
 <li>
-<p><strong>Split-view with hex and character representations</strong>
-The screen is divided approximately 2:1 between hexadecimal and character views. Supported encodings include UTF-8, UTF-16 (LE/BE), and the current Windows code page. You can switch encoding on the fly with key commands.</p>
+<p><strong>Supports files and standard input/output</strong><br />
+<code>bine</code> can read binary data from files or standard input.
+Edited data can also be written to standard output, making it suitable for use in command pipelines.</p>
 </li>
 <li>
-<p><strong>Smart decoding with character annotations</strong>
+<p><strong>Smart decoding with character annotations</strong><br />
 Multi-byte characters are visually grouped based on byte structure. Special code points such as BOMs and control characters (e.g., newlines) are annotated with readable names or symbols, making it easier to understand mixed binary/text content and debug encoding issues.</p>
 </li>
 <li>
-<p><strong>Minimal screen usage</strong>
+<p><strong>Minimal screen usage</strong><br />
 <code>bine</code> only uses as many terminal lines as needed (1 line = 16 bytes), without occupying the full screen. This makes it easy to inspect or edit small binary data while still seeing the surrounding terminal output.</p>
 </li>
 <li>
-<p><strong>Cross-platform</strong>
+<p><strong>Cross-platform</strong><br />
 Written in Go, <code>bine</code> runs on both Windows and Linux. It should also build and work on other Unix-like systems.</p>
 </li>
 </ul>
@@ -1209,8 +1211,9 @@ scoop install bine
 <pre><code>$ bine [FILES...]
 </code></pre>
 <p>or</p>
-<pre><code>$ cat FILE | bine
+<pre><code>$ bine &lt; in.bin &gt; out.bin
 </code></pre>
+<p>Edit the data and save using <code>-</code> as the file name to write the edited data to standard output.</p>
 <h2 id="key-binding">Key-binding</h2>
 <h3 id="cursor-movement">Cursor Movement</h3>
 <ul>
@@ -1247,12 +1250,43 @@ Insert <code>0x00</code> to the left of the cursor</li>
 Insert <code>0x00</code> to the right of the cursor</li>
 <li><code>x</code>, <code>DEL</code><br />
 Delete the byte under the cursor and save it to the internal buffer</li>
+<li><code>v</code><br />
+Start or end selection mode</li>
+<li><code>y</code><br />
+Copy the selected region to the internal buffer. If nothing is selected, copies the byte under the cursor</li>
+<li><code>d</code><br />
+Delete the selected region and copy it to the internal buffer. If nothing is selected, behaves the same as <code>x</code></li>
 <li><code>p</code><br />
-Insert the byte from the internal buffer to the right of the cursor</li>
+Insert data from the internal buffer to the right of the cursor</li>
 <li><code>P</code><br />
-Insert the byte from the internal buffer to the left of the cursor</li>
+Insert data from the internal buffer to the left of the cursor</li>
 <li><code>R</code><br />
 Toggle direct edit mode. In this mode, pressing <code>0</code>–<code>9</code> or <code>a</code>–<code>f</code> directly overwrites the high nibble and then the low nibble of the byte under the cursor. Press <code>R</code> again to return to command mode.</li>
+</ul>
+<h3 id="search">Search</h3>
+<ul>
+<li><code>/</code><br />
+Search forward (toward increasing addresses) from the current cursor position</li>
+<li><code>?</code><br />
+Search backward (toward decreasing addresses) from the current cursor position</li>
+</ul>
+<p>After pressing <code>/</code> or <code>?</code>, enter the search pattern in the input field at the bottom of the screen.<br />
+You can specify the pattern in the following formats:</p>
+<ul>
+<li><code>U+XXXX</code><br />
+Unicode code point (e.g. <code>U+3042</code>)</li>
+<li><code>0xXX</code><br />
+Hexadecimal byte sequence (e.g. <code>0xFE 0xFF</code>)</li>
+<li>Decimal numbers<br />
+Byte values in decimal (e.g. <code>65 66 67</code>)</li>
+<li><code>&quot;string&quot;</code> or <code>u&quot;string&quot;</code><br />
+Text string (UTF-8; <code>u</code> prefix is optional)</li>
+</ul>
+<ul>
+<li><code>n</code><br />
+Repeat the previous search in the same direction</li>
+<li><code>N</code><br />
+Repeat the previous search in the opposite direction</li>
 </ul>
 <h3 id="display">Display</h3>
 <ul>
@@ -1314,6 +1348,7 @@ Quit. If there are unsaved changes, you will be prompted to save before exiting.
 <ul>
 <li><a href="#cursor-movement">Cursor Movement</a></li>
 <li><a href="#editing">Editing</a></li>
+<li><a href="#search">Search</a></li>
 <li><a href="#display">Display</a></li>
 <li><a href="#miscellaneous">Miscellaneous</a></li>
 </ul>
