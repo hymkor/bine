@@ -1,7 +1,10 @@
 Changelog
 =========
-
 ( [English](./CHANGELOG.md) / Japanese )
+
+v0.9.0
+-------
+Mar 21, 2026
 
 ### 不具合修正
 
