@@ -27,29 +27,7 @@ import (
 	"github.com/hymkor/bine/internal/nonblock"
 )
 
-const LINE_SIZE = 16
-
-const (
-	// for Line feed
-	_ARROW_POINTING_DOWNWARDS_THEN_CURVING_LEFTWARDS = '\u2936'
-	_DOWNWARDS_ARROW_WITH_CORNER_LEFTWARDS           = '\u21B5'
-	_DOWNWARDS_ARROW_WITH_TIP_LEFTWARDS              = '\u21B2'
-	_RETURN_SYMBOL                                   = '\u23CE'
-	_SYMBOL_FOR_NEWLINE                              = '\u2424'
-	_SYMBOL_FOR_LINE_FEED                            = '\u240A'
-	_DOWNWARDS_ARROW                                 = '\u2193' // wide
-	_HALFWIDTH_DOWNWARDS_ARROW                       = '\uFFEC'
-
-	// for carriage return
-	_SYMBOL_FOR_CARRIAGE_RETURN = '\u240D' // CR
-	_LEFTWARDS_ARROW            = '\u2190' // wide
-	_HALFWIDTH_LEFTWARDS_ARROW  = '\uFFE9' // <-
-
-	// for tab
-	_SYMBOL_FOR_HORIZONTAL_TABULATION        = '\u2409' // HT
-	_RIGHTWARDS_ARROW_TO_BAR                 = '\u21E5' // ->|
-	_RIGHTWARDS_TRIANGLE_HEADED_ARROW_TO_BAR = '\u2B72' // ->|
-)
+const lineSize = 16
 
 func between(target, cursorAddress, markedAddress int64) bool {
 	if markedAddress < 0 {
@@ -68,7 +46,7 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 
 	value := pointer.Value()
 	var on, off string
-	i := pointer.Address() % 16
+	i := pointer.Address() % lineSize
 	if ((i >> 2) & 1) == 0 {
 		on = app.Scheme.Cell1[0]
 		off = app.Scheme.Cell1[1]
@@ -93,11 +71,11 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 
 func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
 	fmt.Fprintf(out, "%s%08X%s ", app.Scheme.Cell2[0], pointer.Address(), app.Scheme.Cell2[1])
-	for i := 0; i < LINE_SIZE; i++ {
+	for i := 0; i < lineSize; i++ {
 		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
-			for ; i < LINE_SIZE-1; i++ {
+			for ; i < lineSize-1; i++ {
 				out.WriteString("   ")
 			}
 			return false
@@ -107,19 +85,19 @@ func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder
 }
 
 var dontview = map[rune]rune{
-	'\u000a': _HALFWIDTH_DOWNWARDS_ARROW,
-	'\u000d': _HALFWIDTH_LEFTWARDS_ARROW,
-	'\t':     _RIGHTWARDS_ARROW_TO_BAR,
-	'\u202e': '.', // Right-to-Left override
-	'\u202d': '.', // Left-to-Right override
-	'\u202c': '.', // Pop Directional Formatting
+	'\u000a': '\uFFEC', // for Line feed
+	'\u000d': '\uFFE9', // <- halfwidth leftwards arrow; for carriage return
+	'\t':     '\u21E5', // ->| rightwards arrow to bar; for tab
+	'\u202e': '.',      // Right-to-Left override
+	'\u202d': '.',      // Left-to-Right override
+	'\u202c': '.',      // Pop Directional Formatting
 }
 
 func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
 	enc := app.encoding
 	cursorAddress := app.cursor.Address()
 	markedAddress := app.mark
-	for i := 0; i < LINE_SIZE; {
+	for i := 0; i < lineSize; {
 		var c rune
 		startAddress := pointer.Address()
 		b := pointer.Value()
@@ -178,7 +156,7 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 	cursorAddress := app.cursor.Address()
 	var out strings.Builder
 	off := ""
-	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
+	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+lineSize {
 		out.WriteString(ansi.UnderlineOn)
 		off = ansi.UnderlineOff
 	}
@@ -350,14 +328,14 @@ func (app *Application) printDefaultStatusBar() {
 func (app *Application) shiftWindowToSeeCursorLine() {
 	if app.cursor.Address() < app.window.Address() {
 		app.window = app.cursor.Clone()
-		if n := app.window.Address() % LINE_SIZE; n > 0 {
+		if n := app.window.Address() % lineSize; n > 0 {
 			app.window.Rewind(n)
 		}
-	} else if app.cursor.Address() >= app.window.Address()+LINE_SIZE*int64(app.dataHeight()) {
+	} else if app.cursor.Address() >= app.window.Address()+lineSize*int64(app.dataHeight()) {
 		app.window = app.cursor.Clone()
 		app.window.Rewind(
-			app.window.Address()%LINE_SIZE +
-				int64(LINE_SIZE*(app.dataHeight()-1)))
+			app.window.Address()%lineSize +
+				int64(lineSize*(app.dataHeight()-1)))
 	}
 }
 
@@ -455,7 +433,7 @@ func Run(args []string) error {
 					lf, _ = app.View()
 					io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 					lf++
-					if app.buffer.Len() >= int64(app.screenHeight*LINE_SIZE) {
+					if app.buffer.Len() >= int64(app.screenHeight*lineSize) {
 						autoRepaint = false
 					}
 				}

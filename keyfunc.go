@@ -14,6 +14,7 @@ import (
 
 	"github.com/nyaosorg/go-inline-animation"
 	"github.com/nyaosorg/go-readline-ny"
+	"github.com/nyaosorg/go-readline-ny/keys"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
 
 	"github.com/hymkor/bine/internal/encoding"
@@ -22,30 +23,9 @@ import (
 	"github.com/hymkor/go-safewrite/perm"
 )
 
-const (
-	_KEY_CTRL_A = "\x01"
-	_KEY_CTRL_B = "\x02"
-	_KEY_CTRL_E = "\x05"
-	_KEY_CTRL_F = "\x06"
-	_KEY_CTRL_L = "\x0C"
-	_KEY_CTRL_N = "\x0E"
-	_KEY_CTRL_P = "\x10"
-	_KEY_DOWN   = "\x1B[B"
-	_KEY_ESC    = "\x1B"
-	_KEY_LEFT   = "\x1B[D"
-	_KEY_RIGHT  = "\x1B[C"
-	_KEY_UP     = "\x1B[A"
-	_KEY_F2     = "\x1B[OQ"
-	_KEY_DEL    = "\x1B[3~"
-	_KEY_ALT_A  = "\x1Ba"
-	_KEY_ALT_U  = "\x1Bu"
-	_KEY_ALT_L  = "\x1Bl"
-	_KEY_ALT_B  = "\x1Bb"
-)
-
 // keyFuncNext moves the cursor to the the next 16-bytes block.
 func keyFuncNext(this *Application) error {
-	if err := this.cursor.Skip(LINE_SIZE); err != nil {
+	if err := this.cursor.Skip(lineSize); err != nil {
 		if !errors.Is(err, io.EOF) && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
@@ -64,7 +44,7 @@ func keyFuncBackword(app *Application) error {
 
 // keyFuncPrevious moves the cursor the the previous 16-bytes block.
 func keyFuncPrevious(this *Application) error {
-	this.cursor.Rewind(LINE_SIZE)
+	this.cursor.Rewind(lineSize)
 	return nil
 }
 
@@ -101,7 +81,7 @@ func keyFuncForward(app *Application) error {
 
 // keyFuncGoBeginOfLine move the cursor the the top of the 16bytes-block.
 func keyFuncGoBeginOfLine(app *Application) error {
-	n := app.cursor.Address() % LINE_SIZE
+	n := app.cursor.Address() % lineSize
 	if n > 0 {
 		app.cursor.Rewind(n)
 	}
@@ -111,7 +91,7 @@ func keyFuncGoBeginOfLine(app *Application) error {
 
 // keyFuncGoEndOfLine move the cursor to the end of the current 16 byte block.
 func keyFuncGoEndOfLine(app *Application) error {
-	n := LINE_SIZE - app.cursor.Address()%LINE_SIZE - 1
+	n := lineSize - app.cursor.Address()%lineSize - 1
 	if n > 0 {
 		app.cursor.Skip(n)
 	}
@@ -730,53 +710,53 @@ func keyFuncSearchBackwardNext(app *Application) error {
 }
 
 var jumpTable = map[string]func(this *Application) error{
-	"u":         keyFuncUndo,
-	"i":         keyFuncInsertExp,
-	"I":         keyFuncInsertZero,
-	"a":         keyFuncAppendExp,
-	"A":         keyFuncAppendZero,
-	_KEY_ALT_A:  keyFuncDbcsMode,
-	_KEY_ALT_U:  keyFuncUtf8Mode,
-	_KEY_ALT_L:  keyFuncUtf16LeMode,
-	_KEY_ALT_B:  keyFuncUtf16BeMode,
-	"&":         keyFuncGoTo,
-	"q":         keyFuncQuit,
-	"j":         keyFuncNext,
-	_KEY_DOWN:   keyFuncNext,
-	_KEY_CTRL_N: keyFuncNext,
-	"h":         keyFuncBackword,
-	"\b":        keyFuncBackword,
-	_KEY_LEFT:   keyFuncBackword,
-	_KEY_CTRL_B: keyFuncBackword,
-	"k":         keyFuncPrevious,
-	_KEY_UP:     keyFuncPrevious,
-	_KEY_CTRL_P: keyFuncPrevious,
-	"l":         keyFuncForward,
-	" ":         keyFuncForward,
-	_KEY_RIGHT:  keyFuncForward,
-	_KEY_CTRL_F: keyFuncForward,
-	"0":         keyFuncGoBeginOfLine,
-	"^":         keyFuncGoBeginOfLine,
-	_KEY_CTRL_A: keyFuncGoBeginOfLine,
-	"$":         keyFuncGoEndOfLine,
-	_KEY_CTRL_E: keyFuncGoEndOfLine,
-	"<":         keyFuncGoBeginOfFile,
-	">":         keyFuncGoEndOfFile,
-	"G":         keyFuncGoEndOfFile,
-	"p":         keyFuncPasteAfter,
-	"P":         keyFuncPasteBefore,
-	"x":         keyFuncRemoveByte,
-	"d":         keyFuncDelete,
-	_KEY_DEL:    keyFuncRemoveByte,
-	"w":         keyFuncWriteFile,
-	"r":         keyFuncReplaceByte,
-	_KEY_CTRL_L: keyFuncRepaint,
-	"R":         keyFuncChangeMode,
-	"v":         keyFuncMarking,
-	"y":         keyFuncYank,
-	"/":         keyFuncSearchForward,
-	"n":         keyFuncSearchForwardNext,
-	"?":         keyFuncSearchBackward,
-	"N":         keyFuncSearchBackwardNext,
-	"\x1C":      keyFuncDebug,
+	"u":                keyFuncUndo,
+	"i":                keyFuncInsertExp,
+	"I":                keyFuncInsertZero,
+	"a":                keyFuncAppendExp,
+	"A":                keyFuncAppendZero,
+	keys.AltA:          keyFuncDbcsMode,
+	keys.AltU:          keyFuncUtf8Mode,
+	keys.AltL:          keyFuncUtf16LeMode,
+	keys.AltB:          keyFuncUtf16BeMode,
+	"&":                keyFuncGoTo,
+	"q":                keyFuncQuit,
+	"j":                keyFuncNext,
+	keys.Down:          keyFuncNext,
+	keys.CtrlN:         keyFuncNext,
+	"h":                keyFuncBackword,
+	"\b":               keyFuncBackword,
+	keys.Left:          keyFuncBackword,
+	keys.CtrlB:         keyFuncBackword,
+	"k":                keyFuncPrevious,
+	keys.Up:            keyFuncPrevious,
+	keys.CtrlP:         keyFuncPrevious,
+	"l":                keyFuncForward,
+	" ":                keyFuncForward,
+	keys.Right:         keyFuncForward,
+	keys.CtrlF:         keyFuncForward,
+	"0":                keyFuncGoBeginOfLine,
+	"^":                keyFuncGoBeginOfLine,
+	keys.CtrlA:         keyFuncGoBeginOfLine,
+	"$":                keyFuncGoEndOfLine,
+	keys.CtrlE:         keyFuncGoEndOfLine,
+	"<":                keyFuncGoBeginOfFile,
+	">":                keyFuncGoEndOfFile,
+	"G":                keyFuncGoEndOfFile,
+	"p":                keyFuncPasteAfter,
+	"P":                keyFuncPasteBefore,
+	"x":                keyFuncRemoveByte,
+	"d":                keyFuncDelete,
+	keys.Delete:        keyFuncRemoveByte,
+	"w":                keyFuncWriteFile,
+	"r":                keyFuncReplaceByte,
+	keys.CtrlL:         keyFuncRepaint,
+	"R":                keyFuncChangeMode,
+	"v":                keyFuncMarking,
+	"y":                keyFuncYank,
+	"/":                keyFuncSearchForward,
+	"n":                keyFuncSearchForwardNext,
+	"?":                keyFuncSearchBackward,
+	"N":                keyFuncSearchBackwardNext,
+	keys.CtrlBackslash: keyFuncDebug,
 }
