@@ -158,7 +158,7 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 	return out.String(), hasNextLine
 }
 
-func (app *Application) View() (int, error) {
+func (app *Application) view() (int, error) {
 	h := app.screenHeight - 1
 	out := app.out
 	count := 0
@@ -385,7 +385,7 @@ func Run(args []string) error {
 			lastHeight = app.screenHeight
 			io.WriteString(app.out, ansi.CursorOff)
 		}
-		lf, err := app.View()
+		lf, err := app.view()
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
@@ -417,7 +417,7 @@ func Run(args []string) error {
 					if lf > 0 {
 						fmt.Fprintf(app.out, "\x1B[%dA", lf)
 					}
-					lf, _ = app.View()
+					lf, _ = app.view()
 					io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 					lf++
 					if app.buffer.Len() >= int64(app.screenHeight*lineSize) {

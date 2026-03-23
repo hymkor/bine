@@ -486,7 +486,7 @@ func keyFuncInsertExp(app *Application) error {
 		app.message = err.Error()
 		return nil
 	}
-	err = app.InsertExp(exp)
+	err = app.insertExp(exp)
 	if err != nil {
 		app.message = err.Error()
 	}
@@ -494,7 +494,7 @@ func keyFuncInsertExp(app *Application) error {
 }
 
 func keyFuncInsertZero(app *Application) error {
-	app.InsertZero()
+	app.insertZero()
 	app.editMode = app.editMode.Reset()
 	return nil
 }
@@ -505,7 +505,7 @@ func keyFuncAppendExp(app *Application) error {
 		app.message = err.Error()
 		return nil
 	}
-	err = app.AppendExp(exp)
+	err = app.appendExp(exp)
 	if err != nil {
 		app.message = err.Error()
 	}
@@ -513,7 +513,7 @@ func keyFuncAppendExp(app *Application) error {
 }
 
 func keyFuncAppendZero(app *Application) error {
-	app.AppendZero()
+	app.appendZero()
 	app.cursor.Next()
 	app.editMode = app.editMode.Reset()
 	return nil

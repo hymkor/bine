@@ -14,8 +14,6 @@ import (
 	"github.com/hymkor/bine/internal/ansi"
 )
 
-type Tty = ttyadapter.Tty
-
 type scheme struct {
 	Cursor [2]string
 	Select [2]string

@@ -13,13 +13,13 @@ import (
 
 func _insert(exp string) func(*Application) error {
 	return func(app *Application) error {
-		return app.InsertExp(exp)
+		return app.insertExp(exp)
 	}
 }
 
 func _append(exp string) func(*Application) error {
 	return func(app *Application) error {
-		return app.AppendExp(exp)
+		return app.appendExp(exp)
 	}
 }
 
