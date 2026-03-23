@@ -29,19 +29,8 @@ import (
 
 const lineSize = 16
 
-func between(target, cursorAddress, markedAddress int64) bool {
-	if markedAddress < 0 {
-		return false
-	}
-	if markedAddress < cursorAddress {
-		return markedAddress <= target && target <= cursorAddress
-	}
-	return cursorAddress <= target && target <= markedAddress
-}
-
 func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder) {
 	cursorAddress := app.cursor.Address()
-	markedAddress := app.mark
 	m := app.editMode
 
 	value := pointer.Value()
@@ -55,12 +44,12 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 		off = app.Scheme.Cell2[1]
 	}
 	if pointer.Address() == cursorAddress {
-		if markedAddress >= 0 {
+		if _, ok := app.mark.(marking); ok {
 			m.PrintByte(value, app.Scheme.Select[0], app.Scheme.Select[1], app.Scheme, out)
 		} else {
 			m.PrintByte(value, on, off, app.Scheme, out)
 		}
-	} else if between(pointer.Address(), cursorAddress, markedAddress) {
+	} else if app.mark.Contains(pointer.Address(), cursorAddress) {
 		fmt.Fprintf(out, "%s%02X%s", app.Scheme.Select[0], value, app.Scheme.Select[1])
 	} else {
 		fmt.Fprintf(out, "%s%02X%s", on, value, off)
@@ -96,7 +85,6 @@ var dontview = map[rune]rune{
 func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
 	enc := app.encoding
 	cursorAddress := app.cursor.Address()
-	markedAddress := app.mark
 	for i := 0; i < lineSize; {
 		var c rune
 		startAddress := pointer.Address()
@@ -130,7 +118,7 @@ func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Build
 			out.WriteString(app.Scheme.Cursor[0])
 			out.WriteRune(c)
 			out.WriteString(app.Scheme.Cursor[1])
-		} else if between(startAddress, cursorAddress, markedAddress) {
+		} else if app.mark.Contains(startAddress, cursorAddress) {
 			out.WriteString(app.Scheme.Select[0])
 			out.WriteRune(c)
 			out.WriteString(app.Scheme.Select[1])
@@ -206,7 +194,7 @@ type Application struct {
 	cursor       *large.Pointer
 	window       *large.Pointer
 	buffer       *large.Buffer
-	clipBoard    *Clip
+	clipBoard    clipBoard
 	dirty        bool
 	savePath     string
 	message      string
@@ -215,7 +203,7 @@ type Application struct {
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application) int64
 	editMode     editModeType
-	mark         int64
+	mark         markMode
 	searchWord   string
 	searchRevert bool
 }
@@ -241,14 +229,13 @@ func detectEncoding(p *large.Pointer) encoding.Encoding {
 
 func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName string) (*Application, error) {
 	this := &Application{
-		savePath:  defaultName,
-		in:        in,
-		out:       out,
-		buffer:    large.NewBuffer(in),
-		clipBoard: NewClip(),
-		editMode:  viewMode{},
-		Scheme:    colorScheme,
-		mark:      -1,
+		savePath: defaultName,
+		in:       in,
+		out:      out,
+		buffer:   large.NewBuffer(in),
+		editMode: viewMode{},
+		Scheme:   colorScheme,
+		mark:     noMarking{},
 	}
 	if noColor := os.Getenv("NO_COLOR"); len(noColor) > 0 {
 		this.Scheme = monoScheme

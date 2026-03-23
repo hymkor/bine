@@ -157,18 +157,10 @@ func keyFuncPasteBefore(this *Application) error {
 	return nil
 }
 
-func fromTo(a, b int64) (from, to int64) {
-	if a < b {
-		return a, b + 1
-	} else {
-		return b, a + 1
-	}
-}
-
 func dupFromPointer(start, until int64, buffer *large.Buffer) (b []byte) {
-	b = make([]byte, 0, until-start)
+	b = make([]byte, 0, until-start+1)
 	p := buffer.NewPointerAt(start)
-	for p.Address() < until {
+	for p.Address() <= until {
 		b = append(b, p.Value())
 		if p.Next() != nil {
 			return
@@ -215,15 +207,15 @@ func keyFuncRemoveByte(this *Application) error {
 }
 
 func keyFuncYank(app *Application) error {
-	if app.mark < 0 {
+	from, to, ok := app.mark.Range(app.cursor.Address())
+	if !ok {
 		app.clipBoard.Push([]byte{app.cursor.Value()})
 		return nil
 	}
-	from, to := fromTo(app.mark, app.cursor.Address())
 	if to-from > 0x80000000 {
 		return errors.New(msgTooLargeToCut)
 	}
-	app.mark = -1
+	app.mark = noMarking{}
 	app.clipBoard.Push(dupFromPointer(from, to, app.buffer))
 	return nil
 }
@@ -235,7 +227,8 @@ func keyFuncDelete(app *Application) error {
 	var removeStatus large.RemoveStatus
 	windowAddress := app.window.Address()
 
-	if app.mark < 0 {
+	from, to, ok := app.mark.Range(app.cursor.Address())
+	if !ok {
 		if app.buffer.Len() <= 1 {
 			app.message = msgCanNotRemoveAll
 			return nil
@@ -245,7 +238,6 @@ func keyFuncDelete(app *Application) error {
 		orgValue = []byte{app.cursor.Value()}
 		removeStatus = app.cursor.Remove()
 	} else {
-		from, to = fromTo(app.mark, app.cursor.Address())
 		if to-from >= app.buffer.Len() {
 			app.message = msgCanNotRemoveAll
 			return nil
@@ -254,14 +246,14 @@ func keyFuncDelete(app *Application) error {
 			app.message = msgTooLargeToCut
 			return nil
 		}
-		app.mark = -1
+		app.mark = noMarking{}
 		orgValue = dupFromPointer(from, to, app.buffer)
 		if from <= 0 {
 			app.cursor = app.buffer.NewPointer()
 		} else {
 			app.cursor = app.buffer.NewPointerAt(from)
 		}
-		removeStatus = app.cursor.RemoveSpace(int(to - from))
+		removeStatus = app.cursor.RemoveSpace(int(to - from + 1))
 	}
 	if removeStatus != large.RemoveSuccess {
 		app.window = app.buffer.NewPointerAt(windowAddress)
@@ -586,11 +578,7 @@ func keyFuncChangeMode(app *Application) error {
 }
 
 func keyFuncMarking(app *Application) error {
-	if app.mark > 0 {
-		app.mark = -1
-	} else {
-		app.mark = app.cursor.Address()
-	}
+	app.mark = app.mark.Toggle(app.cursor.Address())
 	return nil
 }
 

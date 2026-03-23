@@ -1,18 +1,14 @@
 package bine
 
-type Clip struct {
+type clipBoard struct {
 	data [][]byte
 }
 
-func NewClip() *Clip {
-	return &Clip{data: make([][]byte, 0, 100)}
-}
-
-func (c *Clip) Push(n []byte) {
+func (c *clipBoard) Push(n []byte) {
 	c.data = append(c.data, n)
 }
 
-func (c *Clip) Pop() []byte {
+func (c *clipBoard) Pop() []byte {
 	var newByte []byte
 	if len(c.data) > 0 {
 		tail := len(c.data) - 1
@@ -22,6 +18,6 @@ func (c *Clip) Pop() []byte {
 	return newByte
 }
 
-func (c *Clip) Len() int {
+func (c *clipBoard) Len() int {
 	return len(c.data)
 }
