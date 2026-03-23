@@ -202,7 +202,7 @@ type Application struct {
 	Scheme       *Scheme
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application) int64
-	editMode     editModeType
+	editMode     editMode
 	mark         markMode
 	searchWord   string
 	searchRevert bool

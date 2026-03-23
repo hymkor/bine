@@ -569,11 +569,7 @@ func keyFuncReplaceInline(app *Application, n byte) error {
 }
 
 func keyFuncChangeMode(app *Application) error {
-	if _, ok := app.editMode.(directMode); ok {
-		app.editMode = viewMode{}
-	} else {
-		app.editMode = directMode{}
-	}
+	app.editMode = app.editMode.Toggle()
 	return nil
 }
 
