@@ -37,20 +37,20 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 	var on, off string
 	i := pointer.Address() % lineSize
 	if ((i >> 2) & 1) == 0 {
-		on = app.Scheme.Cell1[0]
-		off = app.Scheme.Cell1[1]
+		on = app.scheme.Cell1[0]
+		off = app.scheme.Cell1[1]
 	} else {
-		on = app.Scheme.Cell2[0]
-		off = app.Scheme.Cell2[1]
+		on = app.scheme.Cell2[0]
+		off = app.scheme.Cell2[1]
 	}
 	if pointer.Address() == cursorAddress {
 		if _, ok := app.mark.(marking); ok {
-			m.PrintByte(value, app.Scheme.Select[0], app.Scheme.Select[1], app.Scheme, out)
+			m.PrintByte(value, app.scheme.Select[0], app.scheme.Select[1], app.scheme, out)
 		} else {
-			m.PrintByte(value, on, off, app.Scheme, out)
+			m.PrintByte(value, on, off, app.scheme, out)
 		}
 	} else if app.mark.Contains(pointer.Address(), cursorAddress) {
-		fmt.Fprintf(out, "%s%02X%s", app.Scheme.Select[0], value, app.Scheme.Select[1])
+		fmt.Fprintf(out, "%s%02X%s", app.scheme.Select[0], value, app.scheme.Select[1])
 	} else {
 		fmt.Fprintf(out, "%s%02X%s", on, value, off)
 	}
@@ -59,7 +59,7 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
 func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
-	fmt.Fprintf(out, "%s%08X%s ", app.Scheme.Cell2[0], pointer.Address(), app.Scheme.Cell2[1])
+	fmt.Fprintf(out, "%s%08X%s ", app.scheme.Cell2[0], pointer.Address(), app.scheme.Cell2[1])
 	for i := 0; i < lineSize; i++ {
 		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
@@ -115,17 +115,17 @@ func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Build
 		}
 
 		if startAddress <= cursorAddress && cursorAddress <= pointer.Address() {
-			out.WriteString(app.Scheme.Cursor[0])
+			out.WriteString(app.scheme.Cursor[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Cursor[1])
+			out.WriteString(app.scheme.Cursor[1])
 		} else if app.mark.Contains(startAddress, cursorAddress) {
-			out.WriteString(app.Scheme.Select[0])
+			out.WriteString(app.scheme.Select[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Select[1])
+			out.WriteString(app.scheme.Select[1])
 		} else {
-			out.WriteString(app.Scheme.Cell1[0])
+			out.WriteString(app.scheme.Cell1[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Cell1[1])
+			out.WriteString(app.scheme.Cell1[1])
 		}
 		if length == 3 {
 			out.WriteByte(' ')
@@ -199,7 +199,7 @@ type Application struct {
 	savePath     string
 	message      string
 	cache        map[int]string
-	Scheme       *Scheme
+	scheme       *scheme
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application) int64
 	editMode     editMode
@@ -234,11 +234,11 @@ func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName
 		out:      out,
 		buffer:   large.NewBuffer(in),
 		editMode: viewMode{},
-		Scheme:   colorScheme,
+		scheme:   colorScheme,
 		mark:     noMarking{},
 	}
 	if noColor := os.Getenv("NO_COLOR"); len(noColor) > 0 {
-		this.Scheme = monoScheme
+		this.scheme = monoScheme
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -278,7 +278,7 @@ var unicodeName = map[rune]string{
 }
 
 func (app *Application) printDefaultStatusBar() {
-	io.WriteString(app.out, app.Scheme.Status)
+	io.WriteString(app.out, app.scheme.Status)
 	if app.dirty {
 		io.WriteString(app.out, "*")
 	} else {
@@ -395,7 +395,7 @@ func Run(args []string) error {
 		io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 		lf++
 		if app.message != "" {
-			io.WriteString(app.out, app.Scheme.Status)
+			io.WriteString(app.out, app.scheme.Status)
 			io.WriteString(app.out, runewidth.Truncate(app.message, app.screenWidth-1, ""))
 			io.WriteString(app.out, ansi.EraseScrnAfter)
 			io.WriteString(app.out, ansi.Reset)

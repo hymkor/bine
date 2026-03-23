@@ -9,7 +9,7 @@ import (
 type editMode interface {
 	Handle(string, *Application) error
 	String() string
-	PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer)
+	PrintByte(value byte, on, off string, scheme *scheme, w io.Writer)
 	Reset() editMode
 	Next() (editMode, bool)
 	Prev() (editMode, bool)
@@ -29,7 +29,7 @@ func (viewMode) String() string {
 	return "Command:"
 }
 
-func (d viewMode) PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer) {
+func (d viewMode) PrintByte(value byte, on, off string, scheme *scheme, w io.Writer) {
 	fmt.Fprintf(w, "%s%02X%s", scheme.Cursor[0], value, scheme.Cursor[1])
 }
 
@@ -64,7 +64,7 @@ func (directMode) String() string {
 	return "Direct:"
 }
 
-func (d directMode) PrintByte(value byte, on, off string, scheme *Scheme, w io.Writer) {
+func (d directMode) PrintByte(value byte, on, off string, scheme *scheme, w io.Writer) {
 	upper := (value >> 4) & 15
 	lower := value & 15
 	if d.Lower {

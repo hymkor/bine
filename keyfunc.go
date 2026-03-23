@@ -13,7 +13,6 @@ import (
 	"github.com/mattn/go-isatty"
 
 	"github.com/nyaosorg/go-inline-animation"
-	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/keys"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
 
@@ -50,7 +49,7 @@ func keyFuncPrevious(this *Application) error {
 
 func keyFuncQuit(this *Application) error {
 	if this.dirty {
-		ch, err := this.Scheme.ask(this.tty1, this.out, `Quit: Save changes ? ["y": save, "n": quit without saving, other: cancel]`)
+		ch, err := this.scheme.ask(this.tty1, this.out, `Quit: Save changes ? ["y": save, "n": quit without saving, other: cancel]`)
 		if err != nil {
 			return err
 		}
@@ -285,10 +284,6 @@ func keyFuncDelete(app *Application) error {
 	return nil
 }
 
-func (scheme *Scheme) getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
-	return scheme.getline(out, prompt, defaultString, history)
-}
-
 var fnameHistory = simplehistory.New()
 
 func writeWithAnimationAndCancel(buffer *large.Buffer, fd io.Writer, out io.Writer) error {
@@ -313,7 +308,7 @@ func writeFile(app *Application) (string, error) {
 	fname := app.savePath
 
 	var err error
-	fname, err = app.Scheme.getlineOr(out, "write to>", fname, fnameHistory)
+	fname, err = app.scheme.getline(out, "write to>", fname, fnameHistory)
 	if err != nil {
 		return "", err
 	}
@@ -330,9 +325,9 @@ func writeFile(app *Application) (string, error) {
 			return true
 		}
 		if info.ReadOnly() {
-			return app.Scheme.yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
+			return app.scheme.yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
 		}
-		return app.Scheme.yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
+		return app.scheme.yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
 
 	fd, err := safewrite.Open(fname, prompt)
@@ -381,7 +376,7 @@ func keyFuncWriteFile(this *Application) error {
 var byteHistory = simplehistory.New()
 
 func keyFuncReplaceByte(this *Application) error {
-	bytes, err := this.Scheme.getlineOr(this.out, "replace>",
+	bytes, err := this.scheme.getline(this.out, "replace>",
 		fmt.Sprintf("0x%02X", this.cursor.Value()),
 		byteHistory)
 	if err != nil {
@@ -440,7 +435,7 @@ func gotoAddress(app *Application, address int64) error {
 var addressHistory = simplehistory.New()
 
 func keyFuncGoTo(app *Application) error {
-	addressStr, err := app.Scheme.getlineOr(app.out, "Goto Offset>", "0x", addressHistory)
+	addressStr, err := app.scheme.getline(app.out, "Goto Offset>", "0x", addressHistory)
 	if err != nil {
 		app.message = err.Error()
 		return nil
@@ -477,7 +472,7 @@ func keyFuncUtf16BeMode(app *Application) error {
 var expHistory = simplehistory.New()
 
 func readExpression(app *Application, prompt string) (string, error) {
-	exp, err := app.Scheme.getlineOr(app.out, prompt, "0x00", expHistory)
+	exp, err := app.scheme.getline(app.out, prompt, "0x00", expHistory)
 	if err != nil {
 		return "", err
 	}
@@ -628,7 +623,7 @@ func keyFuncSearchForward(app *Application) error {
 		expStr = "0x"
 	}
 	var err error
-	expStr, err = app.Scheme.getlineOr(app.out, "search forward>", expStr, nil)
+	expStr, err = app.scheme.getline(app.out, "search forward>", expStr, nil)
 	if err != nil {
 		app.message = err.Error()
 		return nil
@@ -664,7 +659,7 @@ func keyFuncSearchBackward(app *Application) error {
 		expStr = "0x"
 	}
 	var err error
-	expStr, err = app.Scheme.getlineOr(app.out, "search backward>", expStr, nil)
+	expStr, err = app.scheme.getline(app.out, "search backward>", expStr, nil)
 	if err != nil {
 		app.message = err.Error()
 		return nil
