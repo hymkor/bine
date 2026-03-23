@@ -21,14 +21,14 @@ EXE=$(shell $(GO) env GOEXE)
 
 all:
 	$(GO) fmt ./...
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/bine"
+	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/$(NAME)"
 
 test:
 	$(GO) fmt ./...
 	$(GO) test -v
 
 _dist:
-	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/bine"
+	$(SET) "CGO_ENABLED=0" && $(GO) build $(GOOPT) "./cmd/$(NAME)"
 	zip -9 $(NAME)-$(VERSION)-$(GOOS)-$(GOARCH).zip $(NAME)$(EXE)
 
 dist:
@@ -38,16 +38,16 @@ dist:
 	$(SET) "GOOS=windows" && $(SET) "GOARCH=amd64" && $(MAKE) _dist
 
 bump:
-	$(GO) run github.com/hymkor/latest-notes@latest -gosrc "main" -suffix "-goinstall" > cmd/bine/version.go
+	$(GO) run github.com/hymkor/latest-notes@latest -gosrc "main" -suffix "-goinstall" > cmd/$(NAME)/version.go
 
 release:
-	$(GO) run github.com/hymkor/latest-notes@master | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
+	$(GO) run github.com/hymkor/latest-notes@latest | gh release create -d --notes-file - -t $(VERSION) $(VERSION) $(wildcard $(NAME)-$(VERSION)-*.zip)
 
 clean:
 	$(DEL) *.zip $(NAME)$(EXE)
 
 manifest:
-	$(GO) run github.com/hymkor/make-scoop-manifest@master -all *-windows-*.zip > $(NAME).json
+	$(GO) run github.com/hymkor/make-scoop-manifest@latest -all *-windows-*.zip > $(NAME).json
 
 readme:
 	$(GO) run github.com/hymkor/example-into-readme@latest
@@ -59,4 +59,4 @@ docs:
 	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG.md > docs/CHANGELOG.html
 	$(GO) run github.com/hymkor/minipage@latest -title "Bine - Release notes" -outline-in-sidebar -readme-to-index CHANGELOG_ja.md > docs/CHANGELOG_ja.html
 
-.PHONY: all test _dist dist clean manifest docs test
+.PHONY: all test _dist dist clean manifest docs
