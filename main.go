@@ -205,7 +205,7 @@ type Application struct {
 	editMode     editMode
 	mark         markMode
 	searchWord   string
-	searchRevert bool
+	search       search
 }
 
 func (app *Application) dataHeight() int {
