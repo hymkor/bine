@@ -573,6 +573,12 @@ func keyFuncMarking(app *Application) error {
 	return nil
 }
 
+func keyFuncCancelAll(app *Application) error {
+	app.mark = noMarking{}
+	app.editMode = viewMode{}
+	return nil
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":                keyFuncUndo,
 	"i":                keyFuncInsertExp,
@@ -623,4 +629,5 @@ var jumpTable = map[string]func(this *Application) error{
 	"?":                keyFuncSearchBackward,
 	"N":                keyFuncSearchBackwardNext,
 	keys.CtrlBackslash: keyFuncDebug,
+	keys.CtrlG:         keyFuncCancelAll,
 }

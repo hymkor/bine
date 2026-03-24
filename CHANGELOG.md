@@ -2,6 +2,8 @@ Changelog
 =========
 ( English / [Japanese](./CHANGELOG_ja.md) )
 
+- Add Ctrl-G to cancel current mode (selection / direct edit) and return to view mode (#77)
+
 v0.9.0
 -------
 Mar 21, 2026
