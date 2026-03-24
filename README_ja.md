@@ -164,13 +164,12 @@ $ bine < in.bin > out.bin
 次のようなフォーマットのパターンを指定できる
 
 - `U+XXXX`  
-  Unicode code point (e.g. `U+3042`)
+  Unicode のコードポイント (e.g. `U+3042`)
 - `0xXX`  
-  Hexadecimal byte sequence (e.g. `0xFE 0xFF`)
-- Decimal numbers  
-  Byte values in decimal (e.g. `65 66 67`)
+  16進数 (e.g. `0xFE 0xFF`)
+- 10進数 (e.g. `65 66 67`)
 - `"string"` or `u"string"`  
-  Text string (UTF-8; `u` prefix is optional)
+  文字列 (UTF-8; 接頭語 `u` は任意)
 
 * `n`  
   直前の検索を同じ方向に繰り返す
