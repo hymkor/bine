@@ -191,6 +191,8 @@ You can specify the pattern in the following formats:
 
 ### Miscellaneous
 
+* `Ctrl-G`  
+  Cancel current mode (selection / direct edit) and return to view mode
 * `u`  
   Undo the last change. Press repeatedly to undo further changes in sequence.
 * `w`  
