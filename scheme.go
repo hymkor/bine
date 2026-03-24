@@ -14,9 +14,7 @@ import (
 	"github.com/hymkor/bine/internal/ansi"
 )
 
-type Tty = ttyadapter.Tty
-
-type Scheme struct {
+type scheme struct {
 	Cursor [2]string
 	Select [2]string
 	Cell1  [2]string
@@ -24,7 +22,7 @@ type Scheme struct {
 	Status string
 }
 
-var colorScheme = &Scheme{
+var colorScheme = &scheme{
 	Cursor: [2]string{"\x1B[39;49;1;7m", "\x1B[27;22m"},
 	Select: [2]string{"\x1B[39;44m", "\x1B[39;49m"},
 	Cell1:  [2]string{"\x1B[39;49;22m", ""},
@@ -32,7 +30,7 @@ var colorScheme = &Scheme{
 	Status: "\x1B[0;33;22m",
 }
 
-var monoScheme = &Scheme{
+var monoScheme = &scheme{
 	Cursor: [2]string{"\x1B[1;7m", "\x1B[27;22m"},
 	Select: [2]string{"\x1B[22;7m", "\x1B[27m"},
 	Cell1:  [2]string{"\x1B[22m", ""},
@@ -40,7 +38,7 @@ var monoScheme = &Scheme{
 	Status: "\x1B[0m",
 }
 
-func (scheme *Scheme) getline(out io.Writer, prompt string, defaultStr string, history readline.IHistory) (string, error) {
+func (scheme *scheme) getline(out io.Writer, prompt string, defaultStr string, history readline.IHistory) (string, error) {
 	editor := readline.Editor{
 		Writer:  out,
 		Default: defaultStr,
@@ -62,14 +60,14 @@ func (scheme *Scheme) getline(out io.Writer, prompt string, defaultStr string, h
 	return text, err
 }
 
-func (scheme *Scheme) ask(tty1 Tty, out io.Writer, message string) (string, error) {
+func (scheme *scheme) ask(tty1 ttyadapter.Tty, out io.Writer, message string) (string, error) {
 	fmt.Fprintf(out, "%s\r%s%s %s", scheme.Status, message, ansi.EraseLine, ansi.CursorOn)
 	ch, err := tty1.GetKey()
 	io.WriteString(out, ansi.CursorOff)
 	return ch, err
 }
 
-func (scheme *Scheme) yesNo(tty1 Tty, out io.Writer, message string) bool {
+func (scheme *scheme) yesNo(tty1 ttyadapter.Tty, out io.Writer, message string) bool {
 	ch, err := scheme.ask(tty1, out, message)
 	if err == nil && (ch == "y" || ch == "Y") {
 		fmt.Fprintf(out, " %s ", ch)

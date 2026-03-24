@@ -27,63 +27,30 @@ import (
 	"github.com/hymkor/bine/internal/nonblock"
 )
 
-const LINE_SIZE = 16
-
-const (
-	// for Line feed
-	_ARROW_POINTING_DOWNWARDS_THEN_CURVING_LEFTWARDS = '\u2936'
-	_DOWNWARDS_ARROW_WITH_CORNER_LEFTWARDS           = '\u21B5'
-	_DOWNWARDS_ARROW_WITH_TIP_LEFTWARDS              = '\u21B2'
-	_RETURN_SYMBOL                                   = '\u23CE'
-	_SYMBOL_FOR_NEWLINE                              = '\u2424'
-	_SYMBOL_FOR_LINE_FEED                            = '\u240A'
-	_DOWNWARDS_ARROW                                 = '\u2193' // wide
-	_HALFWIDTH_DOWNWARDS_ARROW                       = '\uFFEC'
-
-	// for carriage return
-	_SYMBOL_FOR_CARRIAGE_RETURN = '\u240D' // CR
-	_LEFTWARDS_ARROW            = '\u2190' // wide
-	_HALFWIDTH_LEFTWARDS_ARROW  = '\uFFE9' // <-
-
-	// for tab
-	_SYMBOL_FOR_HORIZONTAL_TABULATION        = '\u2409' // HT
-	_RIGHTWARDS_ARROW_TO_BAR                 = '\u21E5' // ->|
-	_RIGHTWARDS_TRIANGLE_HEADED_ARROW_TO_BAR = '\u2B72' // ->|
-)
-
-func between(target, cursorAddress, markedAddress int64) bool {
-	if markedAddress < 0 {
-		return false
-	}
-	if markedAddress < cursorAddress {
-		return markedAddress <= target && target <= cursorAddress
-	}
-	return cursorAddress <= target && target <= markedAddress
-}
+const lineSize = 16
 
 func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder) {
 	cursorAddress := app.cursor.Address()
-	markedAddress := app.mark
 	m := app.editMode
 
 	value := pointer.Value()
 	var on, off string
-	i := pointer.Address() % 16
+	i := pointer.Address() % lineSize
 	if ((i >> 2) & 1) == 0 {
-		on = app.Scheme.Cell1[0]
-		off = app.Scheme.Cell1[1]
+		on = app.scheme.Cell1[0]
+		off = app.scheme.Cell1[1]
 	} else {
-		on = app.Scheme.Cell2[0]
-		off = app.Scheme.Cell2[1]
+		on = app.scheme.Cell2[0]
+		off = app.scheme.Cell2[1]
 	}
 	if pointer.Address() == cursorAddress {
-		if markedAddress >= 0 {
-			m.PrintByte(value, app.Scheme.Select[0], app.Scheme.Select[1], app.Scheme, out)
+		if _, ok := app.mark.(marking); ok {
+			m.PrintByte(value, app.scheme.Select[0], app.scheme.Select[1], app.scheme, out)
 		} else {
-			m.PrintByte(value, on, off, app.Scheme, out)
+			m.PrintByte(value, on, off, app.scheme, out)
 		}
-	} else if between(pointer.Address(), cursorAddress, markedAddress) {
-		fmt.Fprintf(out, "%s%02X%s", app.Scheme.Select[0], value, app.Scheme.Select[1])
+	} else if app.mark.Contains(pointer.Address(), cursorAddress) {
+		fmt.Fprintf(out, "%s%02X%s", app.scheme.Select[0], value, app.scheme.Select[1])
 	} else {
 		fmt.Fprintf(out, "%s%02X%s", on, value, off)
 	}
@@ -92,12 +59,12 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
 func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
-	fmt.Fprintf(out, "%s%08X%s ", app.Scheme.Cell2[0], pointer.Address(), app.Scheme.Cell2[1])
-	for i := 0; i < LINE_SIZE; i++ {
+	fmt.Fprintf(out, "%s%08X%s ", app.scheme.Cell2[0], pointer.Address(), app.scheme.Cell2[1])
+	for i := 0; i < lineSize; i++ {
 		app.makeHexOne(pointer, out)
 		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
-			for ; i < LINE_SIZE-1; i++ {
+			for ; i < lineSize-1; i++ {
 				out.WriteString("   ")
 			}
 			return false
@@ -107,19 +74,18 @@ func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder
 }
 
 var dontview = map[rune]rune{
-	'\u000a': _HALFWIDTH_DOWNWARDS_ARROW,
-	'\u000d': _HALFWIDTH_LEFTWARDS_ARROW,
-	'\t':     _RIGHTWARDS_ARROW_TO_BAR,
-	'\u202e': '.', // Right-to-Left override
-	'\u202d': '.', // Left-to-Right override
-	'\u202c': '.', // Pop Directional Formatting
+	'\u000a': '\uFFEC', // for Line feed
+	'\u000d': '\uFFE9', // <- halfwidth leftwards arrow; for carriage return
+	'\t':     '\u21E5', // ->| rightwards arrow to bar; for tab
+	'\u202e': '.',      // Right-to-Left override
+	'\u202d': '.',      // Left-to-Right override
+	'\u202c': '.',      // Pop Directional Formatting
 }
 
 func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
 	enc := app.encoding
 	cursorAddress := app.cursor.Address()
-	markedAddress := app.mark
-	for i := 0; i < LINE_SIZE; {
+	for i := 0; i < lineSize; {
 		var c rune
 		startAddress := pointer.Address()
 		b := pointer.Value()
@@ -149,17 +115,17 @@ func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Build
 		}
 
 		if startAddress <= cursorAddress && cursorAddress <= pointer.Address() {
-			out.WriteString(app.Scheme.Cursor[0])
+			out.WriteString(app.scheme.Cursor[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Cursor[1])
-		} else if between(startAddress, cursorAddress, markedAddress) {
-			out.WriteString(app.Scheme.Select[0])
+			out.WriteString(app.scheme.Cursor[1])
+		} else if app.mark.Contains(startAddress, cursorAddress) {
+			out.WriteString(app.scheme.Select[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Select[1])
+			out.WriteString(app.scheme.Select[1])
 		} else {
-			out.WriteString(app.Scheme.Cell1[0])
+			out.WriteString(app.scheme.Cell1[0])
 			out.WriteRune(c)
-			out.WriteString(app.Scheme.Cell1[1])
+			out.WriteString(app.scheme.Cell1[1])
 		}
 		if length == 3 {
 			out.WriteByte(' ')
@@ -178,7 +144,7 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 	cursorAddress := app.cursor.Address()
 	var out strings.Builder
 	off := ""
-	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+LINE_SIZE {
+	if p := pointer.Address(); p <= cursorAddress && cursorAddress < p+lineSize {
 		out.WriteString(ansi.UnderlineOn)
 		off = ansi.UnderlineOff
 	}
@@ -192,7 +158,7 @@ func (app *Application) makeLineImage(pointer *large.Pointer) (string, bool) {
 	return out.String(), hasNextLine
 }
 
-func (app *Application) View() (int, error) {
+func (app *Application) view() (int, error) {
 	h := app.screenHeight - 1
 	out := app.out
 	count := 0
@@ -228,18 +194,18 @@ type Application struct {
 	cursor       *large.Pointer
 	window       *large.Pointer
 	buffer       *large.Buffer
-	clipBoard    *Clip
+	clipBoard    clipBoard
 	dirty        bool
 	savePath     string
 	message      string
 	cache        map[int]string
-	Scheme       *Scheme
+	scheme       *scheme
 	encoding     encoding.Encoding
 	undoFuncs    []func(app *Application) int64
-	editMode     editModeType
-	mark         int64
+	editMode     editMode
+	mark         markMode
 	searchWord   string
-	searchRevert bool
+	search       search
 }
 
 func (app *Application) dataHeight() int {
@@ -263,17 +229,16 @@ func detectEncoding(p *large.Pointer) encoding.Encoding {
 
 func NewApplication(tty ttyadapter.Tty, in io.Reader, out io.Writer, defaultName string) (*Application, error) {
 	this := &Application{
-		savePath:  defaultName,
-		in:        in,
-		out:       out,
-		buffer:    large.NewBuffer(in),
-		clipBoard: NewClip(),
-		editMode:  viewMode{},
-		Scheme:    colorScheme,
-		mark:      -1,
+		savePath: defaultName,
+		in:       in,
+		out:      out,
+		buffer:   large.NewBuffer(in),
+		editMode: viewMode{},
+		scheme:   colorScheme,
+		mark:     noMarking{},
 	}
 	if noColor := os.Getenv("NO_COLOR"); len(noColor) > 0 {
-		this.Scheme = monoScheme
+		this.scheme = monoScheme
 	}
 	this.window = large.NewPointer(this.buffer)
 	if this.window == nil {
@@ -313,7 +278,7 @@ var unicodeName = map[rune]string{
 }
 
 func (app *Application) printDefaultStatusBar() {
-	io.WriteString(app.out, app.Scheme.Status)
+	io.WriteString(app.out, app.scheme.Status)
 	if app.dirty {
 		io.WriteString(app.out, "*")
 	} else {
@@ -350,14 +315,14 @@ func (app *Application) printDefaultStatusBar() {
 func (app *Application) shiftWindowToSeeCursorLine() {
 	if app.cursor.Address() < app.window.Address() {
 		app.window = app.cursor.Clone()
-		if n := app.window.Address() % LINE_SIZE; n > 0 {
+		if n := app.window.Address() % lineSize; n > 0 {
 			app.window.Rewind(n)
 		}
-	} else if app.cursor.Address() >= app.window.Address()+LINE_SIZE*int64(app.dataHeight()) {
+	} else if app.cursor.Address() >= app.window.Address()+lineSize*int64(app.dataHeight()) {
 		app.window = app.cursor.Clone()
 		app.window.Rewind(
-			app.window.Address()%LINE_SIZE +
-				int64(LINE_SIZE*(app.dataHeight()-1)))
+			app.window.Address()%lineSize +
+				int64(lineSize*(app.dataHeight()-1)))
 	}
 }
 
@@ -420,7 +385,7 @@ func Run(args []string) error {
 			lastHeight = app.screenHeight
 			io.WriteString(app.out, ansi.CursorOff)
 		}
-		lf, err := app.View()
+		lf, err := app.view()
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
@@ -430,7 +395,7 @@ func Run(args []string) error {
 		io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 		lf++
 		if app.message != "" {
-			io.WriteString(app.out, app.Scheme.Status)
+			io.WriteString(app.out, app.scheme.Status)
 			io.WriteString(app.out, runewidth.Truncate(app.message, app.screenWidth-1, ""))
 			io.WriteString(app.out, ansi.EraseScrnAfter)
 			io.WriteString(app.out, ansi.Reset)
@@ -452,10 +417,10 @@ func Run(args []string) error {
 					if lf > 0 {
 						fmt.Fprintf(app.out, "\x1B[%dA", lf)
 					}
-					lf, _ = app.View()
+					lf, _ = app.view()
 					io.WriteString(app.out, "\r\n") // \r is for Linux & go-tty
 					lf++
-					if app.buffer.Len() >= int64(app.screenHeight*LINE_SIZE) {
+					if app.buffer.Len() >= int64(app.screenHeight*lineSize) {
 						autoRepaint = false
 					}
 				}

@@ -13,7 +13,7 @@ import (
 	"github.com/mattn/go-isatty"
 
 	"github.com/nyaosorg/go-inline-animation"
-	"github.com/nyaosorg/go-readline-ny"
+	"github.com/nyaosorg/go-readline-ny/keys"
 	"github.com/nyaosorg/go-readline-ny/simplehistory"
 
 	"github.com/hymkor/bine/internal/encoding"
@@ -22,30 +22,9 @@ import (
 	"github.com/hymkor/go-safewrite/perm"
 )
 
-const (
-	_KEY_CTRL_A = "\x01"
-	_KEY_CTRL_B = "\x02"
-	_KEY_CTRL_E = "\x05"
-	_KEY_CTRL_F = "\x06"
-	_KEY_CTRL_L = "\x0C"
-	_KEY_CTRL_N = "\x0E"
-	_KEY_CTRL_P = "\x10"
-	_KEY_DOWN   = "\x1B[B"
-	_KEY_ESC    = "\x1B"
-	_KEY_LEFT   = "\x1B[D"
-	_KEY_RIGHT  = "\x1B[C"
-	_KEY_UP     = "\x1B[A"
-	_KEY_F2     = "\x1B[OQ"
-	_KEY_DEL    = "\x1B[3~"
-	_KEY_ALT_A  = "\x1Ba"
-	_KEY_ALT_U  = "\x1Bu"
-	_KEY_ALT_L  = "\x1Bl"
-	_KEY_ALT_B  = "\x1Bb"
-)
-
 // keyFuncNext moves the cursor to the the next 16-bytes block.
 func keyFuncNext(this *Application) error {
-	if err := this.cursor.Skip(LINE_SIZE); err != nil {
+	if err := this.cursor.Skip(lineSize); err != nil {
 		if !errors.Is(err, io.EOF) && !errors.Is(err, os.ErrDeadlineExceeded) {
 			return err
 		}
@@ -64,13 +43,13 @@ func keyFuncBackword(app *Application) error {
 
 // keyFuncPrevious moves the cursor the the previous 16-bytes block.
 func keyFuncPrevious(this *Application) error {
-	this.cursor.Rewind(LINE_SIZE)
+	this.cursor.Rewind(lineSize)
 	return nil
 }
 
 func keyFuncQuit(this *Application) error {
 	if this.dirty {
-		ch, err := this.Scheme.ask(this.tty1, this.out, `Quit: Save changes ? ["y": save, "n": quit without saving, other: cancel]`)
+		ch, err := this.scheme.ask(this.tty1, this.out, `Quit: Save changes ? ["y": save, "n": quit without saving, other: cancel]`)
 		if err != nil {
 			return err
 		}
@@ -101,7 +80,7 @@ func keyFuncForward(app *Application) error {
 
 // keyFuncGoBeginOfLine move the cursor the the top of the 16bytes-block.
 func keyFuncGoBeginOfLine(app *Application) error {
-	n := app.cursor.Address() % LINE_SIZE
+	n := app.cursor.Address() % lineSize
 	if n > 0 {
 		app.cursor.Rewind(n)
 	}
@@ -111,7 +90,7 @@ func keyFuncGoBeginOfLine(app *Application) error {
 
 // keyFuncGoEndOfLine move the cursor to the end of the current 16 byte block.
 func keyFuncGoEndOfLine(app *Application) error {
-	n := LINE_SIZE - app.cursor.Address()%LINE_SIZE - 1
+	n := lineSize - app.cursor.Address()%lineSize - 1
 	if n > 0 {
 		app.cursor.Skip(n)
 	}
@@ -177,18 +156,10 @@ func keyFuncPasteBefore(this *Application) error {
 	return nil
 }
 
-func fromTo(a, b int64) (from, to int64) {
-	if a < b {
-		return a, b + 1
-	} else {
-		return b, a + 1
-	}
-}
-
 func dupFromPointer(start, until int64, buffer *large.Buffer) (b []byte) {
-	b = make([]byte, 0, until-start)
+	b = make([]byte, 0, until-start+1)
 	p := buffer.NewPointerAt(start)
-	for p.Address() < until {
+	for p.Address() <= until {
 		b = append(b, p.Value())
 		if p.Next() != nil {
 			return
@@ -235,15 +206,15 @@ func keyFuncRemoveByte(this *Application) error {
 }
 
 func keyFuncYank(app *Application) error {
-	if app.mark < 0 {
+	from, to, ok := app.mark.Range(app.cursor.Address())
+	if !ok {
 		app.clipBoard.Push([]byte{app.cursor.Value()})
 		return nil
 	}
-	from, to := fromTo(app.mark, app.cursor.Address())
 	if to-from > 0x80000000 {
 		return errors.New(msgTooLargeToCut)
 	}
-	app.mark = -1
+	app.mark = noMarking{}
 	app.clipBoard.Push(dupFromPointer(from, to, app.buffer))
 	return nil
 }
@@ -255,7 +226,8 @@ func keyFuncDelete(app *Application) error {
 	var removeStatus large.RemoveStatus
 	windowAddress := app.window.Address()
 
-	if app.mark < 0 {
+	from, to, ok := app.mark.Range(app.cursor.Address())
+	if !ok {
 		if app.buffer.Len() <= 1 {
 			app.message = msgCanNotRemoveAll
 			return nil
@@ -265,7 +237,6 @@ func keyFuncDelete(app *Application) error {
 		orgValue = []byte{app.cursor.Value()}
 		removeStatus = app.cursor.Remove()
 	} else {
-		from, to = fromTo(app.mark, app.cursor.Address())
 		if to-from >= app.buffer.Len() {
 			app.message = msgCanNotRemoveAll
 			return nil
@@ -274,14 +245,14 @@ func keyFuncDelete(app *Application) error {
 			app.message = msgTooLargeToCut
 			return nil
 		}
-		app.mark = -1
+		app.mark = noMarking{}
 		orgValue = dupFromPointer(from, to, app.buffer)
 		if from <= 0 {
 			app.cursor = app.buffer.NewPointer()
 		} else {
 			app.cursor = app.buffer.NewPointerAt(from)
 		}
-		removeStatus = app.cursor.RemoveSpace(int(to - from))
+		removeStatus = app.cursor.RemoveSpace(int(to - from + 1))
 	}
 	if removeStatus != large.RemoveSuccess {
 		app.window = app.buffer.NewPointerAt(windowAddress)
@@ -313,10 +284,6 @@ func keyFuncDelete(app *Application) error {
 	return nil
 }
 
-func (scheme *Scheme) getlineOr(out io.Writer, prompt string, defaultString string, history readline.IHistory) (string, error) {
-	return scheme.getline(out, prompt, defaultString, history)
-}
-
 var fnameHistory = simplehistory.New()
 
 func writeWithAnimationAndCancel(buffer *large.Buffer, fd io.Writer, out io.Writer) error {
@@ -341,7 +308,7 @@ func writeFile(app *Application) (string, error) {
 	fname := app.savePath
 
 	var err error
-	fname, err = app.Scheme.getlineOr(out, "write to>", fname, fnameHistory)
+	fname, err = app.scheme.getline(out, "write to>", fname, fnameHistory)
 	if err != nil {
 		return "", err
 	}
@@ -358,9 +325,9 @@ func writeFile(app *Application) (string, error) {
 			return true
 		}
 		if info.ReadOnly() {
-			return app.Scheme.yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
+			return app.scheme.yesNo(tty1, out, "Overwrite READONLY file \""+info.Name+"\" [y/n] ?")
 		}
-		return app.Scheme.yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
+		return app.scheme.yesNo(tty1, out, "Overwrite as \""+info.Name+"\" [y/n] ?")
 	}
 
 	fd, err := safewrite.Open(fname, prompt)
@@ -409,7 +376,7 @@ func keyFuncWriteFile(this *Application) error {
 var byteHistory = simplehistory.New()
 
 func keyFuncReplaceByte(this *Application) error {
-	bytes, err := this.Scheme.getlineOr(this.out, "replace>",
+	bytes, err := this.scheme.getline(this.out, "replace>",
 		fmt.Sprintf("0x%02X", this.cursor.Value()),
 		byteHistory)
 	if err != nil {
@@ -468,7 +435,7 @@ func gotoAddress(app *Application, address int64) error {
 var addressHistory = simplehistory.New()
 
 func keyFuncGoTo(app *Application) error {
-	addressStr, err := app.Scheme.getlineOr(app.out, "Goto Offset>", "0x", addressHistory)
+	addressStr, err := app.scheme.getline(app.out, "Goto Offset>", "0x", addressHistory)
 	if err != nil {
 		app.message = err.Error()
 		return nil
@@ -505,7 +472,7 @@ func keyFuncUtf16BeMode(app *Application) error {
 var expHistory = simplehistory.New()
 
 func readExpression(app *Application, prompt string) (string, error) {
-	exp, err := app.Scheme.getlineOr(app.out, prompt, "0x00", expHistory)
+	exp, err := app.scheme.getline(app.out, prompt, "0x00", expHistory)
 	if err != nil {
 		return "", err
 	}
@@ -519,7 +486,7 @@ func keyFuncInsertExp(app *Application) error {
 		app.message = err.Error()
 		return nil
 	}
-	err = app.InsertExp(exp)
+	err = app.insertExp(exp)
 	if err != nil {
 		app.message = err.Error()
 	}
@@ -527,7 +494,7 @@ func keyFuncInsertExp(app *Application) error {
 }
 
 func keyFuncInsertZero(app *Application) error {
-	app.InsertZero()
+	app.insertZero()
 	app.editMode = app.editMode.Reset()
 	return nil
 }
@@ -538,7 +505,7 @@ func keyFuncAppendExp(app *Application) error {
 		app.message = err.Error()
 		return nil
 	}
-	err = app.AppendExp(exp)
+	err = app.appendExp(exp)
 	if err != nil {
 		app.message = err.Error()
 	}
@@ -546,7 +513,7 @@ func keyFuncAppendExp(app *Application) error {
 }
 
 func keyFuncAppendZero(app *Application) error {
-	app.AppendZero()
+	app.appendZero()
 	app.cursor.Next()
 	app.editMode = app.editMode.Reset()
 	return nil
@@ -597,186 +564,63 @@ func keyFuncReplaceInline(app *Application, n byte) error {
 }
 
 func keyFuncChangeMode(app *Application) error {
-	if _, ok := app.editMode.(directMode); ok {
-		app.editMode = viewMode{}
-	} else {
-		app.editMode = directMode{}
-	}
+	app.editMode = app.editMode.Toggle()
 	return nil
 }
 
 func keyFuncMarking(app *Application) error {
-	if app.mark > 0 {
-		app.mark = -1
-	} else {
-		app.mark = app.cursor.Address()
-	}
+	app.mark = app.mark.Toggle(app.cursor.Address())
 	return nil
 }
 
-func searchBytes(app *Application, exp []byte, walk func(*large.Pointer) error) error {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-	p := app.cursor.Clone()
-	app.out.Write([]byte{' '})
-	end := animation.Dots.Progress(app.out)
-	defer end()
-	for {
-		if err := ctx.Err(); err != nil {
-			app.message = "Search interrupted"
-			return nil
-		}
-		if err := walk(p); err != nil {
-			if err == io.EOF {
-				app.message = "not found"
-			} else {
-				app.message = err.Error()
-			}
-			return nil
-		}
-		if p.Value() == exp[0] {
-			q := p.Clone()
-			i := 1
-			for {
-				if i >= len(exp) {
-					app.cursor = p
-					return nil
-				}
-				if err := q.Next(); err != nil {
-					break
-				}
-				if q.Value() != exp[i] {
-					break
-				}
-				i++
-			}
-		}
-	}
-}
-
-func walkForward(p *large.Pointer) error { return p.Next() }
-
-func walkBackward(p *large.Pointer) error { return p.Prev() }
-
-func keyFuncSearchForward(app *Application) error {
-	expStr := app.searchWord
-	if expStr == "" {
-		expStr = "0x"
-	}
-	var err error
-	expStr, err = app.Scheme.getlineOr(app.out, "search forward>", expStr, nil)
-	if err != nil {
-		app.message = err.Error()
-		return nil
-	}
-	exp, err := evalExpression(expStr, app.encoding)
-	if err != nil {
-		app.message = err.Error()
-		return nil
-	}
-	if len(exp) <= 0 {
-		return nil
-	}
-	app.searchWord = expStr
-	app.searchRevert = false
-	return searchBytes(app, exp, func(p *large.Pointer) error { return p.Next() })
-}
-
-func keyFuncSearchForwardNext(app *Application) error {
-	exp, err := evalExpression(app.searchWord, app.encoding)
-	if err != nil {
-		return err
-	}
-	f := walkForward
-	if app.searchRevert {
-		f = walkBackward
-	}
-	return searchBytes(app, exp, f)
-}
-
-func keyFuncSearchBackward(app *Application) error {
-	expStr := app.searchWord
-	if expStr == "" {
-		expStr = "0x"
-	}
-	var err error
-	expStr, err = app.Scheme.getlineOr(app.out, "search backward>", expStr, nil)
-	if err != nil {
-		app.message = err.Error()
-		return nil
-	}
-	exp, err := evalExpression(expStr, app.encoding)
-	if err != nil {
-		return err
-	}
-	if len(exp) <= 0 {
-		return nil
-	}
-	app.searchWord = expStr
-	app.searchRevert = true
-	return searchBytes(app, exp, func(p *large.Pointer) error { return p.Prev() })
-}
-
-func keyFuncSearchBackwardNext(app *Application) error {
-	exp, err := evalExpression(app.searchWord, app.encoding)
-	if err != nil {
-		return err
-	}
-	f := walkBackward
-	if app.searchRevert {
-		f = walkForward
-	}
-	return searchBytes(app, exp, f)
-}
-
 var jumpTable = map[string]func(this *Application) error{
-	"u":         keyFuncUndo,
-	"i":         keyFuncInsertExp,
-	"I":         keyFuncInsertZero,
-	"a":         keyFuncAppendExp,
-	"A":         keyFuncAppendZero,
-	_KEY_ALT_A:  keyFuncDbcsMode,
-	_KEY_ALT_U:  keyFuncUtf8Mode,
-	_KEY_ALT_L:  keyFuncUtf16LeMode,
-	_KEY_ALT_B:  keyFuncUtf16BeMode,
-	"&":         keyFuncGoTo,
-	"q":         keyFuncQuit,
-	"j":         keyFuncNext,
-	_KEY_DOWN:   keyFuncNext,
-	_KEY_CTRL_N: keyFuncNext,
-	"h":         keyFuncBackword,
-	"\b":        keyFuncBackword,
-	_KEY_LEFT:   keyFuncBackword,
-	_KEY_CTRL_B: keyFuncBackword,
-	"k":         keyFuncPrevious,
-	_KEY_UP:     keyFuncPrevious,
-	_KEY_CTRL_P: keyFuncPrevious,
-	"l":         keyFuncForward,
-	" ":         keyFuncForward,
-	_KEY_RIGHT:  keyFuncForward,
-	_KEY_CTRL_F: keyFuncForward,
-	"0":         keyFuncGoBeginOfLine,
-	"^":         keyFuncGoBeginOfLine,
-	_KEY_CTRL_A: keyFuncGoBeginOfLine,
-	"$":         keyFuncGoEndOfLine,
-	_KEY_CTRL_E: keyFuncGoEndOfLine,
-	"<":         keyFuncGoBeginOfFile,
-	">":         keyFuncGoEndOfFile,
-	"G":         keyFuncGoEndOfFile,
-	"p":         keyFuncPasteAfter,
-	"P":         keyFuncPasteBefore,
-	"x":         keyFuncRemoveByte,
-	"d":         keyFuncDelete,
-	_KEY_DEL:    keyFuncRemoveByte,
-	"w":         keyFuncWriteFile,
-	"r":         keyFuncReplaceByte,
-	_KEY_CTRL_L: keyFuncRepaint,
-	"R":         keyFuncChangeMode,
-	"v":         keyFuncMarking,
-	"y":         keyFuncYank,
-	"/":         keyFuncSearchForward,
-	"n":         keyFuncSearchForwardNext,
-	"?":         keyFuncSearchBackward,
-	"N":         keyFuncSearchBackwardNext,
-	"\x1C":      keyFuncDebug,
+	"u":                keyFuncUndo,
+	"i":                keyFuncInsertExp,
+	"I":                keyFuncInsertZero,
+	"a":                keyFuncAppendExp,
+	"A":                keyFuncAppendZero,
+	keys.AltA:          keyFuncDbcsMode,
+	keys.AltU:          keyFuncUtf8Mode,
+	keys.AltL:          keyFuncUtf16LeMode,
+	keys.AltB:          keyFuncUtf16BeMode,
+	"&":                keyFuncGoTo,
+	"q":                keyFuncQuit,
+	"j":                keyFuncNext,
+	keys.Down:          keyFuncNext,
+	keys.CtrlN:         keyFuncNext,
+	"h":                keyFuncBackword,
+	"\b":               keyFuncBackword,
+	keys.Left:          keyFuncBackword,
+	keys.CtrlB:         keyFuncBackword,
+	"k":                keyFuncPrevious,
+	keys.Up:            keyFuncPrevious,
+	keys.CtrlP:         keyFuncPrevious,
+	"l":                keyFuncForward,
+	" ":                keyFuncForward,
+	keys.Right:         keyFuncForward,
+	keys.CtrlF:         keyFuncForward,
+	"0":                keyFuncGoBeginOfLine,
+	"^":                keyFuncGoBeginOfLine,
+	keys.CtrlA:         keyFuncGoBeginOfLine,
+	"$":                keyFuncGoEndOfLine,
+	keys.CtrlE:         keyFuncGoEndOfLine,
+	"<":                keyFuncGoBeginOfFile,
+	">":                keyFuncGoEndOfFile,
+	"G":                keyFuncGoEndOfFile,
+	"p":                keyFuncPasteAfter,
+	"P":                keyFuncPasteBefore,
+	"x":                keyFuncRemoveByte,
+	"d":                keyFuncDelete,
+	keys.Delete:        keyFuncRemoveByte,
+	"w":                keyFuncWriteFile,
+	"r":                keyFuncReplaceByte,
+	keys.CtrlL:         keyFuncRepaint,
+	"R":                keyFuncChangeMode,
+	"v":                keyFuncMarking,
+	"y":                keyFuncYank,
+	"/":                keyFuncSearchForward,
+	"n":                keyFuncSearchForwardNext,
+	"?":                keyFuncSearchBackward,
+	"N":                keyFuncSearchBackwardNext,
+	keys.CtrlBackslash: keyFuncDebug,
 }
