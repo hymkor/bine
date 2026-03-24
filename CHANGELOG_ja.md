@@ -2,6 +2,8 @@ Changelog
 =========
 ( [English](./CHANGELOG.md) / Japanese )
 
+- Ctrl-G で、ダイレクト編集モード・選択モードを解除し、ビューモードに戻せるようにした (#77)
+
 v0.9.0
 -------
 Mar 21, 2026
