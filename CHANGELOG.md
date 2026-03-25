@@ -3,6 +3,7 @@ Changelog
 ( English / [Japanese](./CHANGELOG_ja.md) )
 
 - Add Ctrl-G to cancel current mode (selection / direct edit) and return to view mode (#77)
+- Add Tab / Shift+Tab to move the cursor to the start of the next/previous UTF-8 character (#78)
 
 v0.9.0
 -------

@@ -124,6 +124,10 @@ Key-binding
   Move the cursor to the end of the file (as far as data has been loaded at that point)
 * `&`  
   Jump to a specified address
+- `Tab`  
+  Move the cursor forward to the start of the next UTF-8 character
+- `Shift+Tab`  
+  Move the cursor backward to the start of the previous UTF-8 character
 
 ### Editing
 
