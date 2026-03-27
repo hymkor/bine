@@ -1,5 +1,5 @@
-Bine - A terminal binary editor
-================================
+Bine - A fast terminal hex editor
+=================================
 ( English / [Japanese](README_ja.md) )
 
 <!-- stdout: go run github.com/hymkor/example-into-readme/cmd/badges@master -->
@@ -9,7 +9,7 @@ Bine - A terminal binary editor
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/hymkor/bine)
 <!-- -->
 
-A fast terminal binary editor with asynchronous loading and pipeline support.
+A fast terminal hex editor for large files and pipelines.
 
 ![DEMO](./demo.gif)
 
