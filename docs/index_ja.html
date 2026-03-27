@@ -1236,6 +1236,12 @@ scoop install bine
 <li><code>&amp;</code><br />
 指定したアドレスへジャンプ</li>
 </ul>
+<ul>
+<li><code>Tab</code><br />
+次の UTF-8 文字の先頭へカーソルを移動</li>
+<li><code>Shift+Tab</code><br />
+前の UTF-8 文字の先頭へカーソルを移動</li>
+</ul>
 <h3 id="%E7%B7%A8%E9%9B%86">編集</h3>
 <ul>
 <li><code>r</code><br />
@@ -1276,13 +1282,12 @@ scoop install bine
 次のようなフォーマットのパターンを指定できる</p>
 <ul>
 <li><code>U+XXXX</code><br />
-Unicode code point (e.g. <code>U+3042</code>)</li>
+Unicode のコードポイント (e.g. <code>U+3042</code>)</li>
 <li><code>0xXX</code><br />
-Hexadecimal byte sequence (e.g. <code>0xFE 0xFF</code>)</li>
-<li>Decimal numbers<br />
-Byte values in decimal (e.g. <code>65 66 67</code>)</li>
+16進数 (e.g. <code>0xFE 0xFF</code>)</li>
+<li>10進数 (e.g. <code>65 66 67</code>)</li>
 <li><code>&quot;string&quot;</code> or <code>u&quot;string&quot;</code><br />
-Text string (UTF-8; <code>u</code> prefix is optional)</li>
+文字列 (UTF-8; 接頭語 <code>u</code> は任意)</li>
 </ul>
 <ul>
 <li><code>n</code><br />
@@ -1304,6 +1309,8 @@ Text string (UTF-8; <code>u</code> prefix is optional)</li>
 <p><code>Meta-</code> は <code>Alt</code> キーと同時に押下するか、<code>Esc</code> を押下してからそのキーを押下することを意味します。</p>
 <h3 id="%E3%81%9D%E3%81%AE%E4%BB%96">その他</h3>
 <ul>
+<li><code>Ctrl-G</code><br />
+現在のモード(ダイレクト編集モード, 選択モード) を解除し、ビューモードに戻る</li>
 <li><code>u</code><br />
 直前の変更を取り消す。繰り返し入力することで、過去の変更を順に取り消せる。</li>
 <li><code>w</code><br />
