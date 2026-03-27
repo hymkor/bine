@@ -573,6 +573,36 @@ func keyFuncMarking(app *Application) error {
 	return nil
 }
 
+func keyFuncCancelAll(app *Application) error {
+	app.mark = noMarking{}
+	app.editMode = viewMode{}
+	return nil
+}
+
+func keyFuncNextRune(app *Application) error {
+	for {
+		if app.cursor.Next() != nil {
+			return nil
+		}
+		val := app.cursor.Value()
+		if val < 0x80 || 0xBF < val {
+			return nil
+		}
+	}
+}
+
+func keyFuncPrevRune(app *Application) error {
+	for {
+		if app.cursor.Prev() != nil {
+			return nil
+		}
+		val := app.cursor.Value()
+		if val < 0x80 || 0xBF < val {
+			return nil
+		}
+	}
+}
+
 var jumpTable = map[string]func(this *Application) error{
 	"u":                keyFuncUndo,
 	"i":                keyFuncInsertExp,
@@ -623,4 +653,7 @@ var jumpTable = map[string]func(this *Application) error{
 	"?":                keyFuncSearchBackward,
 	"N":                keyFuncSearchBackwardNext,
 	keys.CtrlBackslash: keyFuncDebug,
+	keys.CtrlG:         keyFuncCancelAll,
+	"\t":               keyFuncNextRune,
+	keys.ShiftTab:      keyFuncPrevRune,
 }
