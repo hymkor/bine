@@ -1236,6 +1236,12 @@ Move the cursor to the end of the file (as far as data has been loaded at that p
 <li><code>&amp;</code><br />
 Jump to a specified address</li>
 </ul>
+<ul>
+<li><code>Tab</code><br />
+Move the cursor forward to the start of the next UTF-8 character</li>
+<li><code>Shift+Tab</code><br />
+Move the cursor backward to the start of the previous UTF-8 character</li>
+</ul>
 <h3 id="editing">Editing</h3>
 <ul>
 <li><code>r</code><br />
@@ -1302,6 +1308,8 @@ Change the character encoding to UTF-16BE</li>
 <p><code>Meta-</code> means either pressing <code>Alt</code> together with the key, or pressing <code>Esc</code> followed by the key.</p>
 <h3 id="miscellaneous">Miscellaneous</h3>
 <ul>
+<li><code>Ctrl-G</code><br />
+Cancel current mode (selection / direct edit) and return to view mode</li>
 <li><code>u</code><br />
 Undo the last change. Press repeatedly to undo further changes in sequence.</li>
 <li><code>w</code><br />
