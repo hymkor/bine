@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/bits"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,14 +60,20 @@ func (app *Application) makeHexOne(pointer *large.Pointer, out *strings.Builder)
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
 func (app *Application) makeHexPart(pointer *large.Pointer, out *strings.Builder) bool {
-	fmt.Fprintf(out, "%s%08X%s ", app.scheme.Cell2[0], pointer.Address(), app.scheme.Cell2[1])
+	var spaceBit uint64 = 1<<0 | 1<<8
+	width := 8 + 3*lineSize + bits.OnesCount64(spaceBit)
+	defer fmt.Fprintf(out, "\x1B[%dG", width+2)
+	fmt.Fprintf(out, "%s%08X%s", app.scheme.Cell2[0], pointer.Address(), app.scheme.Cell2[1])
 	for i := 0; i < lineSize; i++ {
+		if (spaceBit & 1) != 0 {
+			out.Write([]byte{' ', ' '})
+		} else {
+			out.Write([]byte{' '})
+		}
+		spaceBit >>= 1
 		app.makeHexOne(pointer, out)
-		out.WriteByte(' ')
 		if err := pointer.Next(); err != nil {
-			for ; i < lineSize-1; i++ {
-				out.WriteString("   ")
-			}
+			out.WriteString("\x1B[0K")
 			return false
 		}
 	}
@@ -85,7 +92,16 @@ var dontview = map[rune]rune{
 func (app *Application) makeAsciiPart(pointer *large.Pointer, out *strings.Builder) bool {
 	enc := app.encoding
 	cursorAddress := app.cursor.Address()
-	for i := 0; i < lineSize; {
+	out.WriteString("|")
+	i := 0
+
+	defer func() {
+		if i == lineSize {
+			out.WriteString("|")
+		}
+	}()
+
+	for i < lineSize {
 		var c rune
 		startAddress := pointer.Address()
 		b := pointer.Value()
