@@ -5,6 +5,9 @@ Changelog
 - Improve hex view column rendering for better readability across terminals where bold text can appear too prominent: (#82)
   - Change hex view layout to match `hexdump -C` style
   - Remove bold styling from hex view
+- Update selection highlighting (#83) :
+  - Use white text on blue background by default
+  - Fall back to reverse video when `NO_COLOR` is set
 
 v0.10.0
 -------

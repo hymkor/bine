@@ -23,7 +23,7 @@ type scheme struct {
 
 var colorScheme = &scheme{
 	Cursor: [2]string{"\x1B[39;49;1;7m", "\x1B[27;22m"},
-	Select: [2]string{"\x1B[39;44m", "\x1B[39;49m"},
+	Select: [2]string{"\x1B[37;44m", "\x1B[39;49m"},
 	Cell:   [2]string{"\x1B[39;49;22m", ""},
 	Status: "\x1B[0;33;22m",
 }
