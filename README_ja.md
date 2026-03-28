@@ -1,4 +1,4 @@
-Bine - A terminal binary editor
+Bine - ターミナル用バイナリエディター
 ================================
 ( [English](README.md) / Japanese )
 
