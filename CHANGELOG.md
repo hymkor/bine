@@ -2,6 +2,10 @@ Changelog
 =========
 ( English / [Japanese](./CHANGELOG_ja.md) )
 
+- Improve hex view column rendering for better readability across terminals where bold text can appear too prominent: (#82)
+  - Change hex view layout to match `hexdump -C` style
+  - Remove bold styling from hex view
+
 v0.10.0
 -------
 Mar 27, 2026
