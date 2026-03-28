@@ -2,6 +2,12 @@ Changelog
 =========
 ( English / [Japanese](./CHANGELOG_ja.md) )
 
+### Fixed
+
+- Fix an issue where undo restored one byte less after deletion (#84)
+
+### Changed
+
 - Improve hex view column rendering for better readability across terminals where bold text can appear too prominent: (#82)
   - Change hex view layout to match `hexdump -C` style
   - Remove bold styling from hex view
