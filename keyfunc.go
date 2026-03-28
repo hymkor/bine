@@ -264,10 +264,10 @@ func keyFuncDelete(app *Application) error {
 		var space []byte
 		if from < app.buffer.Len() {
 			p = app.buffer.NewPointerAt(from)
-			space = p.InsertSpace(int(to - from))
+			space = p.InsertSpace(int(to - from + 1))
 		} else {
 			p = app.buffer.NewPointerAt(from - 1)
-			space = p.AppendSpace(int(to - from))
+			space = p.AppendSpace(int(to - from + 1))
 		}
 		copy(space, orgValue)
 		app.dirty = orgDirty
