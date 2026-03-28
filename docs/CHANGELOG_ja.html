@@ -1142,6 +1142,27 @@ a.permalink:hover{
 <div class="main markdown-body">
 <h1 id="changelog">Changelog</h1>
 <p>( <a href="./CHANGELOG.html">English</a> / Japanese )</p>
+<h2 id="v0101">v0.10.1</h2>
+<p>Mar 28, 2026</p>
+<h3 id="%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3">不具合修正</h3>
+<ul>
+<li>カット操作(<code>d</code>)を UNDO した時、復元が１バイト少なくなっている不具合を修正 (#84)</li>
+</ul>
+<h3 id="%E5%A4%89%E6%9B%B4">変更</h3>
+<ul>
+<li>ボールドが目立ちすぎる端末があるので、次のような調整で列の表現を改善した (#82)
+<ul>
+<li>16進数表示レイアウトを <code>hexdump -C</code> スタイル互換とした</li>
+<li>16進数表示でのボールドを廃止</li>
+</ul>
+</li>
+<li>選択表示を改善 (#83) :
+<ul>
+<li>デフォルトでは白文字青背景</li>
+<li><code>NO_COLOR</code> が設定されている時は色反転のみ</li>
+</ul>
+</li>
+</ul>
 <h2 id="v0100">v0.10.0</h2>
 <p>Mar 27, 2026</p>
 <ul>
@@ -1151,7 +1172,7 @@ a.permalink:hover{
 </ul>
 <h2 id="v090">v0.9.0</h2>
 <p>Mar 21, 2026</p>
-<h3 id="%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3">不具合修正</h3>
+<h3 id="%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-1">不具合修正</h3>
 <ul>
 <li>最終行のみ、16進数列と文字表示列の間の空白が1つ少なくなっていた不具合を修正 (#55)</li>
 <li>初期表示で EOF 直前のデータが表示されない不具合を修正 (何かキーを入力すると現れる) (#60)</li>
@@ -1186,7 +1207,7 @@ a.permalink:hover{
 </ul>
 <h2 id="v080">v0.8.0</h2>
 <p>Mar 13, 2026</p>
-<h3 id="%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-1">不具合修正</h3>
+<h3 id="%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-2">不具合修正</h3>
 <ul>
 <li>GNU Make なしでビルドした場合に、バージョン文字列が空になってしまう問題を修正<br />
 今後、バージョンアップ時に <code>make bump</code> を実行する (#33)</li>
@@ -1329,17 +1350,23 @@ a.permalink:hover{
 <ul>
 <li><a href="#changelog">Changelog</a>
 <ul>
+<li><a href="#v0101">v0.10.1</a>
+<ul>
+<li><a href="#%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3">不具合修正</a></li>
+<li><a href="#%E5%A4%89%E6%9B%B4">変更</a></li>
+</ul>
+</li>
 <li><a href="#v0100">v0.10.0</a></li>
 <li><a href="#v090">v0.9.0</a>
 <ul>
-<li><a href="#%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3">不具合修正</a></li>
+<li><a href="#%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-1">不具合修正</a></li>
 <li><a href="#%E6%96%B0%E6%A9%9F%E8%83%BD">新機能</a></li>
 <li><a href="#%E6%94%B9%E5%96%84">改善</a></li>
 </ul>
 </li>
 <li><a href="#v080">v0.8.0</a>
 <ul>
-<li><a href="#%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-1">不具合修正</a></li>
+<li><a href="#%E4%B8%8D%E5%85%B7%E5%90%88%E4%BF%AE%E6%AD%A3-2">不具合修正</a></li>
 <li><a href="#%E4%BB%95%E6%A7%98%E5%A4%89%E6%9B%B4">仕様変更</a></li>
 <li><a href="#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88">ドキュメント</a></li>
 </ul>

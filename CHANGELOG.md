@@ -2,6 +2,10 @@ Changelog
 =========
 ( English / [Japanese](./CHANGELOG_ja.md) )
 
+v0.10.1
+-------
+Mar 28, 2026
+
 ### Fixed
 
 - Fix an issue where undo restored one byte less after deletion (#84)
