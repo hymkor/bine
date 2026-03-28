@@ -17,24 +17,21 @@ import (
 type scheme struct {
 	Cursor [2]string
 	Select [2]string
-	Cell1  [2]string
-	Cell2  [2]string
+	Cell   [2]string
 	Status string
 }
 
 var colorScheme = &scheme{
 	Cursor: [2]string{"\x1B[39;49;1;7m", "\x1B[27;22m"},
 	Select: [2]string{"\x1B[39;44m", "\x1B[39;49m"},
-	Cell1:  [2]string{"\x1B[39;49;22m", ""},
-	Cell2:  [2]string{"\x1B[39;49;1m", "\x1B[22m"},
+	Cell:   [2]string{"\x1B[39;49;22m", ""},
 	Status: "\x1B[0;33;22m",
 }
 
 var monoScheme = &scheme{
 	Cursor: [2]string{"\x1B[1;7m", "\x1B[27;22m"},
 	Select: [2]string{"\x1B[22;7m", "\x1B[27m"},
-	Cell1:  [2]string{"\x1B[22m", ""},
-	Cell2:  [2]string{"\x1B[1m", "\x1B[22m"},
+	Cell:   [2]string{"\x1B[22m", ""},
 	Status: "\x1B[0m",
 }
 
