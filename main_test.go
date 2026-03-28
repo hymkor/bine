@@ -181,6 +181,18 @@ func TestCutAreaAndPasteAfter(t *testing.T) {
 		keyFuncPasteAfter)
 }
 
+func TestCutAreaAndUndo(t *testing.T) {
+	try(t, "012345", "012345",
+		keyFuncGoBeginOfFile,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncMarking,
+		keyFuncForward,
+		keyFuncForward,
+		keyFuncDelete,
+		keyFuncUndo)
+}
+
 func TestCutAreaAndPasteBefore(t *testing.T) {
 	try(t, "012345", "401235",
 		keyFuncGoBeginOfFile,
