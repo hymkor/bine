@@ -1142,6 +1142,16 @@ a.permalink:hover{
 <div class="main markdown-body">
 <h1 id="changelog">Changelog</h1>
 <p>( English / <a href="./CHANGELOG_ja.html">Japanese</a> )</p>
+<h2 id="v0102">v0.10.2</h2>
+<p>Apr 11, 2026</p>
+<ul>
+<li>Change Ctrl-L behavior during input (e.g. data or filename editing) (#86):
+<ul>
+<li>Redraw the current input instead of clearing the entire screen.</li>
+<li>Update go-readline-ny to v1.14.3 supporting redrawing the current input.</li>
+</ul>
+</li>
+</ul>
 <h2 id="v0101">v0.10.1</h2>
 <p>Mar 28, 2026</p>
 <h3 id="fixed">Fixed</h3>
@@ -1350,6 +1360,7 @@ The version string is now updated via <code>make bump</code> during the release 
 <ul>
 <li><a href="#changelog">Changelog</a>
 <ul>
+<li><a href="#v0102">v0.10.2</a></li>
 <li><a href="#v0101">v0.10.1</a>
 <ul>
 <li><a href="#fixed">Fixed</a></li>
