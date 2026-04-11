@@ -50,6 +50,7 @@ func (scheme *scheme) getline(out io.Writer, prompt string, defaultStr string, h
 	defer io.WriteString(out, ansi.CursorOff)
 	editor.BindKey(keys.CtrlG, readline.CmdInterrupt)
 	editor.BindKey(keys.Escape+keys.CtrlG, readline.CmdInterrupt)
+	editor.BindKey(keys.CtrlL, readline.CmdRepaintLine)
 	text, err := editor.ReadLine(context.Background())
 	if err == readline.CtrlC {
 		return "", errors.New("Canceled")
