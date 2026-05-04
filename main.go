@@ -17,7 +17,7 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/nyaosorg/go-ttyadapter"
-	"github.com/nyaosorg/go-ttyadapter/tty8pe"
+	"github.com/nyaosorg/go-ttyadapter/fav"
 
 	"github.com/hymkor/go-safewrite/perm"
 
@@ -362,7 +362,7 @@ func Run(args []string) error {
 		}
 	}
 
-	app, err := NewApplication(&tty8pe.Tty{}, in, out, savePath)
+	app, err := NewApplication(new(fav.Tty), in, out, savePath)
 	if err != nil {
 		return err
 	}
